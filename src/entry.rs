@@ -10,4 +10,6 @@ struct ParsedLine{
     line: String,
 }
 
-pub fn parse_text(text: String){println!("text"); }
+pub fn parse_text(text: String) -> String{
+    return text;
+}
