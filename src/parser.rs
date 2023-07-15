@@ -2,6 +2,7 @@ pub enum CodeType{
     Variable,
     Comment,
     Executable,
+    NoEffect,
 }
 
 // every part of the code can be found here
@@ -10,6 +11,6 @@ struct ParsedLine{
     line: String,
 }
 
-pub fn parse_text(text: String) -> String{
+pub fn shallow_parse(text: String) -> String{
     return text;
 }

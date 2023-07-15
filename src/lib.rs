@@ -1,9 +1,9 @@
 use pyo3::prelude::*;
-mod entry;
+mod parser;
 
 #[pyfunction]
 fn parse(text: String) -> PyResult<String> {
-    Ok(entry::parse_text(text))
+    Ok(parser::shallow_parse(text))
 }
 
 // the header file for all rust code.
