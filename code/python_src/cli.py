@@ -5,9 +5,9 @@ the file that takes care of the cli interface.
 it parses any args that is being passes into it,
 and handles any errors that come with it.
 """
-from sys import exit
-from python_src.config import *
-
+from code.python_src.config import *
+import curses
+import sys
 
 class cases(Enum):
     Default = """
@@ -32,8 +32,35 @@ class cases(Enum):
     
     """
 
+class window:
+    def __init__(self, std: curses.window):
+        self.std = std
+        self.std.clear()
+        self.std.refresh()
+        curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        self.NORMAL_COLOR = curses.color_pair(1)
+        self.WARNING_COLOR = curses.color_pair(2)
+        self.ERROR_COLOR = curses.color_pair(3)
+        self.SUCCESS_COLOR = curses.color_pair(4)
+        self.current_color = self.NORMAL_COLOR
 
-class handle_args():
+    def write(self, obj):
+        self.std.addstr(obj)
+
+
+    def edit_color(self, new_color):
+        self.current_color = new_color
+
+    def graceful_exit(self):
+        self.std.addstr("\npress enter to exit\n")
+        self.std.getch()
+        sys.exit(0)
+
+
+class console:
     def __init__(self, argv: list[str]):
         """
         argv: sys.argv
@@ -41,20 +68,39 @@ class handle_args():
         parses every arg in argv, and returns the appropriate
         result for every one of them
         """
-        if len(argv) == 0:
-            print(cases.Default.value)
-            exit(0)
+        curses.initscr()
+        self.output = self._handle_args(argv)
+        self.window = curses.wrapper(window)
+
+    def log(self, *args, end: str = "\n", ignore_no_repr: bool = True):
+        for arg in args:
+
+            if type(arg) == str:
+                self.window.write(arg)
+            elif hasattr(arg, "__repr__"):
+                self.window.write(arg.__repr__())
+            elif ignore_no_repr:
+                self.window.write(arg.__name__())
+
+        self.window.write(end)
+
+
+
+    def _handle_args(self, argv: list[str]):
+        """
+        handle args is just
+        """
+        if len(argv) == 1:
+            return cases.Default.value
 
         self.file = None
 
         for arg in argv:
             match arg:
                 case "--help":
-                    print(cases.Help.value)
-                    exit(0)
+                    return cases.Help.value
                 case "-h":
-                    print(cases.Help.value)
-                    exit(0)
+                    return cases.Help.value
                 case "-py":
                     self.file = argv[1]
                 case _:
@@ -64,9 +110,12 @@ class handle_args():
 
 
     @property
-    def file_data(self) -> str:
+    def open_file(self) -> str:
+        """
+        tries to open self.file from __init__
+        """
         try:
             with open(self.file, 'r') as file:
                 return file.read()
         except Exception as error:
-            print(error)
+            return error
