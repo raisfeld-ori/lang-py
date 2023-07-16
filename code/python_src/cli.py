@@ -8,6 +8,7 @@ and handles any errors that come with it.
 from sys import exit
 from python_src.config import *
 
+
 class cases(Enum):
     Default = """
     the lang-py-compiler.
@@ -21,7 +22,10 @@ class cases(Enum):
         using this method, you can get rust code that does the same thing as the original python code.
     
     current kwargs:
-        --help -> writes how to use the compiler, and the current kwargs
+        --help -> writes how to use the compiler, and the current existing kwargs
+        -h -> writes how to use the compiler, and the current existing kwargs
+        -py -> when using the python interpreter, use -py to select the right file
+        
     
     WARNING:
         the compiler is in beta, and is bound to have a lot of errors and bugs
@@ -32,7 +36,7 @@ class cases(Enum):
 class handle_args():
     def __init__(self, argv: list[str]):
         """
-        argv: the sys.argv
+        argv: sys.argv
 
         parses every arg in argv, and returns the appropriate
         result for every one of them
@@ -40,6 +44,8 @@ class handle_args():
         if len(argv) == 0:
             print(cases.Default.value)
             exit(0)
+
+        self.file = None
 
         for arg in argv:
             match arg:
@@ -49,8 +55,14 @@ class handle_args():
                 case "-h":
                     print(cases.Help.value)
                     exit(0)
+                case "-py":
+                    self.file = argv[1]
                 case _:
-                    self.file = arg
+                    if not self.file:
+                        self.file = arg
+                        continue
+
+
     @property
     def file_data(self) -> str:
         try:
