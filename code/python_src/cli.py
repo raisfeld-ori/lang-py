@@ -8,7 +8,8 @@ and handles any errors that come with it.
 from code.python_src.config import *
 import curses
 import sys
-
+from types import TracebackType
+from traceback import extract_tb
 class cases(Enum):
     Default = """
     the lang-py-compiler.
@@ -31,25 +32,15 @@ class cases(Enum):
         the compiler is in beta, and is bound to have a lot of errors and bugs
     
     """
-
 class window:
-    def __init__(self, std: curses.window):
+    def __init__(self, std: curses.window, std_color: curses.A_COLOR):
         self.std = std
         self.std.clear()
         self.std.refresh()
-        curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
-        curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        self.NORMAL_COLOR = curses.color_pair(1)
-        self.WARNING_COLOR = curses.color_pair(2)
-        self.ERROR_COLOR = curses.color_pair(3)
-        self.SUCCESS_COLOR = curses.color_pair(4)
-        self.current_color = self.NORMAL_COLOR
+        self.current_color = std_color
 
     def write(self, obj):
-        self.std.addstr(obj)
-
+        self.std.addstr(obj, self.current_color)
 
     def edit_color(self, new_color):
         self.current_color = new_color
@@ -72,7 +63,22 @@ class console:
         self.output = self._handle_args(argv)
         self.window = curses.wrapper(window)
 
-    def log(self, *args, end: str = "\n", ignore_no_repr: bool = True):
+        curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        self.NORMAL_COLOR = curses.color_pair(1)
+        self.WARNING_COLOR = curses.color_pair(2)
+        self.ERROR_COLOR = curses.color_pair(3)
+        self.SUCCESS_COLOR = curses.color_pair(4)
+
+
+    def warn(self, error: Exception, description: str):
+        self.window.edit_color(self.WARNING_COLOR)
+
+
+
+    def log(self, *args, end: str = "\n", ignore_no_repr: bool = True) -> None:
         for arg in args:
 
             if type(arg) == str:
@@ -86,7 +92,7 @@ class console:
 
 
 
-    def _handle_args(self, argv: list[str]):
+    def _handle_args(self, argv: list[str]) -> str:
         """
         handle args is just
         """
@@ -110,7 +116,7 @@ class console:
 
 
     @property
-    def open_file(self) -> str:
+    def open_file(self) -> str | Exception:
         """
         tries to open self.file from __init__
         """
@@ -119,3 +125,21 @@ class console:
                 return file.read()
         except Exception as error:
             return error
+
+def create_exceptions(name: str):
+    class Error(Exception):
+        def __init__(self, description):
+            self.description = description
+            self.name = name
+            self.DEFAULT_TRACEBACK = TracebackType(
+
+            )
+
+        def __repr__(self) -> str:
+            return f"{self.name}: {self.description}"
+
+        def with_traceback(self, tb: TracebackType | None = None) -> str:
+            print(extract_tb(tb))
+            return "test"
+
+    return Error

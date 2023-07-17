@@ -9,14 +9,8 @@
   <component name="ChangeListManager">
     <list default="true" id="7dc36a1b-9855-4e16-b6a7-72e56bd4f0ec" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LICENSE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/python_src/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/python_src/cli.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/tests/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/example.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
