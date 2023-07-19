@@ -8,8 +8,7 @@ and handles any errors that come with it.
 from code.python_src.config import *
 import curses
 import sys
-from types import TracebackType
-from traceback import extract_tb
+import traceback
 class cases(Enum):
     Default = """
     the lang-py-compiler.
@@ -32,8 +31,8 @@ class cases(Enum):
         the compiler is in beta, and is bound to have a lot of errors and bugs
     
     """
-class window:
-    def __init__(self, std: curses.window, std_color: curses.A_COLOR):
+class Window:
+    def __init__(self, std: curses.window, std_color = curses.COLOR_WHITE):
         self.std = std
         self.std.clear()
         self.std.refresh()
@@ -45,13 +44,15 @@ class window:
     def edit_color(self, new_color):
         self.current_color = new_color
 
+    def panic_exit(self, status: int = 1):
+        sys.exit(status)
+
     def graceful_exit(self):
         self.std.addstr("\npress enter to exit\n")
         self.std.getch()
         sys.exit(0)
 
-
-class console:
+class Console:
     def __init__(self, argv: list[str]):
         """
         argv: sys.argv
@@ -61,7 +62,7 @@ class console:
         """
         curses.initscr()
         self.output = self._handle_args(argv)
-        self.window = curses.wrapper(window)
+        self.window = curses.wrapper(Window)
 
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
@@ -73,22 +74,44 @@ class console:
         self.SUCCESS_COLOR = curses.color_pair(4)
 
 
-    def warn(self, error: Exception, description: str):
+    def warn(self, error: Exception | str, with_traceback: bool = False):
+        previous_color = self.window.current_color
         self.window.edit_color(self.WARNING_COLOR)
+        if with_traceback:
+            for line in traceback.extract_stack().format()[:-1]:
+                self.log(line, end="")
+        if type(error) == str:
+            self.log(error)
+        else:
+            self.log(error.__class__.__name__, ": ", error.args[0])
+
+        self.window.edit_color(previous_color)
 
 
+    def panic(self, error: Exception | str, with_traceback: bool = False):
+        self.window.edit_color(self.ERROR_COLOR)
+        if with_traceback:
+            for line in traceback.extract_stack().format()[:-1]:
+                self.log(line, end="")
+        if type(error) == str:
+            self.log(error)
+        else:
+            self.log(error.__class__.__name__, ": ", error.args[0])
+        self.window.panic_exit()
 
     def log(self, *args, end: str = "\n", ignore_no_repr: bool = True) -> None:
-        for arg in args:
+        try:
+            for arg in args:
+                if type(arg) == str:
+                    self.window.write(arg)
+                elif hasattr(arg, "__repr__"):
+                    self.window.write(arg.__repr__())
+                elif ignore_no_repr:
+                    self.window.write(arg.__name__())
 
-            if type(arg) == str:
-                self.window.write(arg)
-            elif hasattr(arg, "__repr__"):
-                self.window.write(arg.__repr__())
-            elif ignore_no_repr:
-                self.window.write(arg.__name__())
-
-        self.window.write(end)
+            self.window.write(end)
+        except Exception as error:
+            self.panic(error, with_traceback=True)
 
 
 
@@ -125,21 +148,3 @@ class console:
                 return file.read()
         except Exception as error:
             return error
-
-def create_exceptions(name: str):
-    class Error(Exception):
-        def __init__(self, description):
-            self.description = description
-            self.name = name
-            self.DEFAULT_TRACEBACK = TracebackType(
-
-            )
-
-        def __repr__(self) -> str:
-            return f"{self.name}: {self.description}"
-
-        def with_traceback(self, tb: TracebackType | None = None) -> str:
-            print(extract_tb(tb))
-            return "test"
-
-    return Error
