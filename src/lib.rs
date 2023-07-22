@@ -6,19 +6,21 @@ rust_header is the start of the code (like fn main()).
 
 use pyo3::prelude::*;
 use pyo3::wrap_pymodule;
+use crate::parser::*;
 
 mod parser;
 
 #[pyfunction]
-fn initial_parse(text: String) -> PyResult<()> {
+fn initial_parse(text: String) -> PyResult<BaseVar> {
     /*
     the initial parse takes in the raw python code, does a shallow parse,
     returns any error it finds. if no error were found, it parses the output of the shallow parse
     and returns the different components of the code.
      */
-    let shallow_code = parser::shallow_parse(text);
+    let shallow_code = ShallowParsedLine::from_pycode(text);
+    let variable: BaseVar = BaseVar::from(shallow_code.iter().nth(0).unwrap().clone());
 
-    Ok(())
+    return Ok(variable);
 }
 
 #[pymodule]
