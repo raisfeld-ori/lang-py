@@ -6,6 +6,8 @@ arguments, parses them, and returns the output
 use std::collections::{hash_map, HashMap};
 use std::any::{Any, TypeId};
 use pyo3::prelude::*;
+use pyo3::exceptions::PyAttributeError;
+use crate::errors;
 
 static OPERATORS: [char; 3] = ['>', '<', '!'];
 static STATEMENTS: [&str; 13] = ["if", "else", "elif",
@@ -34,19 +36,10 @@ pub enum CodeType{
 #[allow(dead_code)]
 #[pyclass]
 pub struct ShallowParsedLine{
-    line_code_type: CodeType,
-    actual_line: String,
-    all_spaces: i32,
-    statements_before: Vec<ShallowParsedLine>,
-}
-
-// the python functions for debugging
-#[pymethods]
-impl ShallowParsedLine {
-    pub fn code_type(&self) -> CodeType {self.line_code_type.clone()}
-    pub fn line(&self) -> String {self.actual_line.clone()}
-    pub fn spaces(&self) -> i32 {self.all_spaces}
-    pub fn statements(&self) -> Vec<ShallowParsedLine> {self.statements_before.clone()}
+    pub line_code_type: CodeType,
+    pub actual_line: String,
+    pub all_spaces: i32,
+    pub  statements_before: Vec<ShallowParsedLine>,
 }
 
 // creating new ShallowParsedLines based on the code given
@@ -109,7 +102,7 @@ impl ShallowParsedLine {
 }
 
 
-// the basic variable, where
+// a basic variable structure
 #[allow(dead_code, unused_variables)]
 #[pyclass]
 pub struct BaseVar {
@@ -119,9 +112,18 @@ pub struct BaseVar {
     owner: ShallowParsedLine,
 }
 
-impl From<ShallowParsedLine> for BaseVar {
-        fn from(shallow_var: ShallowParsedLine) -> BaseVar {
-            if shallow_var.line_code_type.type_id() != CodeType::Variable.type_id() {};
+// implementation of the From trait<ShallowParsedLine>, not much else.
+impl BaseVar {
+        pub fn from(shallow_var: ShallowParsedLine) -> Result<BaseVar, PyErr> {
+            if shallow_var.line_code_type.type_id() != CodeType::Variable.type_id() {
+                return Err(PyAttributeError::new_err(
+                format!("expected Variable, got {:?}", shallow_var.line_code_type.type_id()))
+                ); }
+            else if !shallow_var.actual_line.contains('=') {
+                return Err(PyAttributeError::new_err(
+                format!("invalid variable, missing '='")
+                )); }
+
             let break_point: usize = shallow_var.actual_line.find("=").unwrap();
 
             let name: String = shallow_var.actual_line[..break_point].to_string();
@@ -141,16 +143,16 @@ impl From<ShallowParsedLine> for BaseVar {
                     break;
                 }
             }
-            return BaseVar {
+            return Ok(BaseVar {
                 name: name,
                 value: value,
                 annotation: annotation,
                 owner: owner,
-            }
+            })
     }
 }
 
-
+// functions for debugging the output
 #[pymethods]
 impl BaseVar {
     pub fn name(&self) -> String {self.name.clone()}
@@ -158,4 +160,3 @@ impl BaseVar {
     pub fn annotation(&self) -> Option<String> {self.annotation.clone()}
     pub fn owner(&self) -> ShallowParsedLine {self.owner.clone()}
 }
-

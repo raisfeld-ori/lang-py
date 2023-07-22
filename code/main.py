@@ -7,7 +7,6 @@ if __name__ == '__main__':
     try:
         data = console.open_file
         result = rust_header.parse.initial_parse(data)
-        console.log(result.value())
     except Exception as error:
         console.panic(error)
     finally:

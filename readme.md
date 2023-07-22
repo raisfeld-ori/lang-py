@@ -25,4 +25,6 @@ however, it still has 2 important dependencies:
 
 so if you plan on editing the CLI, please read the curses
 docs, and if you plan on helping with the rust code, please
-read the maturin and pyo3 docs.
+read the maturin and pyo3 docs. (also, please remember that
+code is the true source that is going to be uploaded, the rest
+isn't going to appear)
