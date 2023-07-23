@@ -5,10 +5,10 @@ rust_header is the start of the code (like fn main()).
  */
 use pyo3::prelude::*;
 use pyo3::wrap_pymodule;
-use crate::parser::*;
+use crate::base_parser::*;
 use crate::errors::*;
 
-mod parser;
+mod base_parser;
 mod errors;
 
 #[pyfunction]

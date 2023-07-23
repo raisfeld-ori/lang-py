@@ -1,19 +1,18 @@
 /*
-parser:
-the parser file does what the name says. it takes in different
-arguments, parses them, and returns the output
+base_parser:
+does the basic parsing of the code, meaning it parses things like the code structure,
+the name and value of a variable etc.
  */
 use std::any::Any;
-// use std::collections::{hash_map, HashMap};
 use pyo3::prelude::*;
 use crate::errors::*;
 
 
 static OPERATORS: [char; 3] = ['>', '<', '!'];
-static STATEMENTS: [&str; 13] = ["if", "else", "elif",
+static STATEMENTS: [&str; 14] = ["if", "else", "elif",
     "for", "def", "async", "try", "except",
     "finally", "break", "continue", "while",
-    "class"];
+    "class", "with"];
 
 /*
 all python of python's code can be categorized into 4 types:
@@ -34,13 +33,13 @@ pub enum CodeType{
 
 // the most basic parsing of the code
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 #[pyclass]
 pub struct ShallowParsedLine{
     pub line_code_type: CodeType,
     pub actual_line: String,
     pub all_spaces: i32,
-    pub  statements_before: Vec<ShallowParsedLine>,
+    pub statements_before: Vec<ShallowParsedLine>,
+    pub placement: Option<i32>,
 }
 
 // creating new ShallowParsedLines based on the code given
@@ -50,7 +49,7 @@ impl ShallowParsedLine {
         let mut result: Vec<ShallowParsedLine> = Vec::new();
         let mut statements_before: Vec<ShallowParsedLine> = Vec::new();
 
-        for line in python_code.lines() {
+        for (i, line) in python_code.lines().enumerate() {
             let mut line_type: CodeType = CodeType::Unknown;
 
             if STATEMENTS.contains(&line) {
@@ -73,10 +72,11 @@ impl ShallowParsedLine {
             }
 
             result.push(ShallowParsedLine {
-            line_code_type: line_type.clone(),
-            actual_line: line.to_string(),
-            all_spaces: spaces_found,
-            statements_before: statements_before.clone(),
+                line_code_type: line_type.clone(),
+                actual_line: line.to_string(),
+                all_spaces: spaces_found,
+                statements_before: statements_before.clone(),
+                placement: Option(i as i32),
             });
 
             if line_type.type_id() == CodeType::Statement.type_id(){
@@ -85,6 +85,7 @@ impl ShallowParsedLine {
                     actual_line: line.to_string(),
                     all_spaces: spaces_found,
                     statements_before: statements_before.clone(),
+                    placement: Option(i as i32),
                 });
             }
         }
@@ -94,17 +95,18 @@ impl ShallowParsedLine {
 
     pub fn empty(code: Option<String>) -> ShallowParsedLine {
         return ShallowParsedLine{
-                line_code_type: CodeType::Unknown,
-                actual_line: code.unwrap_or("".to_string()),
-                all_spaces: 0,
-                statements_before: vec![],
-                };
+            line_code_type: CodeType::Unknown,
+            actual_line: code.unwrap_or("".to_string()),
+            all_spaces: 0,
+            statements_before: vec![],
+            placement: None,
+        };
     }
 }
 
 
 // a basic variable structure
-#[allow(dead_code, unused_variables)]
+#[derive(Debug, Clone)]
 #[pyclass]
 pub struct BaseVar {
     pub name: String,
@@ -149,4 +151,15 @@ impl BaseVar {
                 owner: owner,
             })
     }
+}
+#[derive(Clone, Debug)]
+#[pyclass]
+enum StatementType {
+    Import, For, If, Elif, Else,
+    Async, Def, Try, Except, Finally,
+    While, Class,
+}
+
+pub struct BaseStatement {
+    pub statement_type: StatementType,
 }
