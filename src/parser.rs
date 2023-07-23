@@ -3,11 +3,11 @@ parser:
 the parser file does what the name says. it takes in different
 arguments, parses them, and returns the output
  */
-use std::collections::{hash_map, HashMap};
-use std::any::{Any, TypeId};
+use std::any::Any;
+// use std::collections::{hash_map, HashMap};
 use pyo3::prelude::*;
-use pyo3::exceptions::PyAttributeError;
-use crate::errors;
+use crate::errors::*;
+
 
 static OPERATORS: [char; 3] = ['>', '<', '!'];
 static STATEMENTS: [&str; 13] = ["if", "else", "elif",
@@ -30,6 +30,7 @@ pub enum CodeType{
     Unknown = 2,
     Statement = 3,
 }
+
 
 // the most basic parsing of the code
 #[derive(Debug, Clone)]
@@ -106,23 +107,21 @@ impl ShallowParsedLine {
 #[allow(dead_code, unused_variables)]
 #[pyclass]
 pub struct BaseVar {
-    name: String,
-    value: String,
-    annotation: Option<String>,
-    owner: ShallowParsedLine,
+    pub name: String,
+    pub value: String,
+    pub annotation: Option<String>,
+    pub owner: ShallowParsedLine,
 }
 
 // implementation of the From trait<ShallowParsedLine>, not much else.
 impl BaseVar {
-        pub fn from(shallow_var: ShallowParsedLine) -> Result<BaseVar, PyErr> {
+        pub fn from(shallow_var: ShallowParsedLine) -> Result<BaseVar, NotVarError> {
             if shallow_var.line_code_type.type_id() != CodeType::Variable.type_id() {
-                return Err(PyAttributeError::new_err(
-                format!("expected Variable, got {:?}", shallow_var.line_code_type.type_id()))
-                ); }
+                return Err(NotVarError (format!("expected a var, got {:?}", shallow_var.line_code_type)))
+            }
             else if !shallow_var.actual_line.contains('=') {
-                return Err(PyAttributeError::new_err(
-                format!("invalid variable, missing '='")
-                )); }
+                return Err(NotVarError ("the variable given does not have a '='".to_string()))
+            }
 
             let break_point: usize = shallow_var.actual_line.find("=").unwrap();
 
@@ -150,13 +149,4 @@ impl BaseVar {
                 owner: owner,
             })
     }
-}
-
-// functions for debugging the output
-#[pymethods]
-impl BaseVar {
-    pub fn name(&self) -> String {self.name.clone()}
-    pub fn value(&self) -> String {self.value.clone()}
-    pub fn annotation(&self) -> Option<String> {self.annotation.clone()}
-    pub fn owner(&self) -> ShallowParsedLine {self.owner.clone()}
 }

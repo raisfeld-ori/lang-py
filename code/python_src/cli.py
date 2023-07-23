@@ -44,12 +44,15 @@ class Window:
         self.std.refresh()
         self.current_color = std_color
 
-    def write(self, obj):
-        self.std.addstr(obj, self.current_color)
+    def write(self, obj: str):
+        try:
+            self.std.addstr(obj, self.current_color)
+        except Exception as error:
+            self.__init__(self.std, self.current_color)
+            self.write(f"(got error: {error})\n")
 
     def edit_color(self, new_color):
         self.current_color = new_color
-
 
     def exit(self, state: int = 0):
         self.std.addstr("\npress enter to exit\n")
@@ -65,8 +68,9 @@ class Console:
         result for every one of them
         """
         curses.initscr()
-        self.output = self._handle_args(argv)
         self.window = curses.wrapper(Window)
+        self.height, self.width = self.window.std.getmaxyx()
+        self.window.std.resize(self.height, self.width)
 
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
@@ -77,6 +81,8 @@ class Console:
         self.ERROR_COLOR = curses.color_pair(3)
         self.SUCCESS_COLOR = curses.color_pair(4)
         self.warnings = 0
+
+        self.output = self._handle_args(argv)
 
     def warn(self, error: Exception | str, with_traceback: bool = False, suggestion: str = None):
         previous_color = self.window.current_color
@@ -97,18 +103,21 @@ class Console:
 
 
     def panic(self, error: Exception | str, with_traceback: bool = False, suggestion: str = None):
-        self.window.edit_color(self.ERROR_COLOR)
-        if with_traceback:
-            for line in traceback.extract_stack().format()[:-1]:
-                self.log(line, end="")
-        if type(error) == str:
+        try:
+            self.window.edit_color(self.ERROR_COLOR)
+            if with_traceback:
+                for line in traceback.extract_stack().format()[:-1]:
+                    self.log(line, end="")
+            if type(error) == str:
+                self.log(error)
+            else:
+                self.log(error.__class__.__name__, ": ", error.args[0])
+            self.window.edit_color(self.SUCCESS_COLOR)
+            if suggestion:
+                self.log("suggestion -> ",suggestion)
+            self.window.exit(1)
+        except Exception as error:
             self.log(error)
-        else:
-            self.log(error.__class__.__name__, ": ", error.args[0])
-        self.window.edit_color(self.SUCCESS_COLOR)
-        if suggestion:
-            self.log("suggestion -> ",suggestion)
-        self.window.exit(1)
 
     def log(self, *args, end: str = "\n", method: repr_methods = repr_methods.repr ) -> None:
         try:
@@ -116,7 +125,6 @@ class Console:
                 if type(arg) == str:
                     self.window.write(arg)
                     continue
-
                 match method:
                     case repr_methods.repr:
                         self.window.write(f"{arg}")
@@ -127,7 +135,7 @@ class Console:
 
             self.window.write(end)
         except Exception as error:
-            self.panic(error, with_traceback=True, suggestion="try using another repr methods from python_src.enums")
+            self.panic(error, with_traceback=False, suggestion="try using another repr method")
     def graceful_exit(self, state: int = 0):
         self.window.edit_color(self.SUCCESS_COLOR)
         self.log("warnings: ", self.warnings)
@@ -156,13 +164,16 @@ class Console:
                     if not self.file:
                         self.file = arg
                         continue
+        if not self.file:
+            self.panic("no file given", suggestion="try using -py if you're using the python interpreter")
 
 
-    @property
-    def open_file(self) -> str | Exception:
+    def open_file(self, new_file: str = None) -> str | Exception:
         """
         tries to open self.file from __init__
         """
+        if new_file:
+            self.file = new_file
         try:
             with open(self.file, 'r') as file:
                 return file.read()
