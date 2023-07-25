@@ -70,8 +70,7 @@ class Console:
         curses.initscr()
         self.window = curses.wrapper(Window)
         self.height, self.width = self.window.std.getmaxyx()
-        self.window.std.resize(self.height, self.width)
-
+        curses.resize_term(self.height, self.width)
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)

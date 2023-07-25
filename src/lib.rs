@@ -1,29 +1,22 @@
-/*
-lib:
-lib is the 'header' file for the rest of  the rust code.
-rust_header is the start of the code (like fn main()).
- */
 use pyo3::prelude::*;
 use pyo3::wrap_pymodule;
 use crate::base_parser::*;
 use crate::errors::*;
+use crate::outputs::*;
 
 mod base_parser;
 mod errors;
+mod outputs;
 
 #[pyfunction]
-fn initial_parse(text: String) -> PyResult<(Option<BaseVar>, Option<NotVarError>)> {
+fn initial_parse(text: String) -> PyResult<BaseOutput> {
     /*
     the initial parse takes in the raw python code, does a shallow parse,
     returns any error it finds. if no error were found, it parses the output of the shallow parse
     and returns the different components of the code.
      */
     let shallow_code = ShallowParsedLine::from_pycode(text);
-    let variable = BaseVar::from(shallow_code.iter().nth(0).unwrap().clone());
-    return Ok(match variable {
-        Err(error) => {(None, Some(error))}
-        Ok(the_var) => {(Some(the_var), None)}
-    });
+    return Ok(BaseOutput::from(shallow_code));
 }
 
 #[pymodule]

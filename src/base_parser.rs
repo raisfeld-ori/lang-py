@@ -4,14 +4,16 @@ does the basic parsing of the code, meaning it parses things like the code struc
 the name and value of a variable etc.
  */
 use std::any::Any;
+use std::ptr::write;
+use pyo3::callback::IntoPyCallbackOutput;
 use pyo3::prelude::*;
 use crate::errors::*;
 
 
 static OPERATORS: [char; 3] = ['>', '<', '!'];
-static STATEMENTS: [&str; 14] = ["if", "else", "elif",
+static STATEMENTS: [&str; 12] = ["if", "else", "elif",
     "for", "def", "async", "try", "except",
-    "finally", "break", "continue", "while",
+    "finally", "while",
     "class", "with"];
 
 /*
@@ -40,6 +42,15 @@ pub struct ShallowParsedLine{
     pub all_spaces: i32,
     pub statements_before: Vec<ShallowParsedLine>,
     pub placement: Option<i32>,
+}
+
+#[pymethods]
+impl ShallowParsedLine {
+    pub fn line_code_type(&self) -> CodeType {self.line_code_type.clone()}
+    pub fn actual_line(&self) -> String {self.actual_line.clone()}
+    pub fn all_spaces(&self) -> i32 {self.all_spaces.clone()}
+    pub fn statements_before(&self) -> Vec<ShallowParsedLine> {self.statements_before.clone()}
+    pub fn placement(&self) -> Option<i32> {self.placement.clone()}
 }
 
 // creating new ShallowParsedLines based on the code given
@@ -76,7 +87,7 @@ impl ShallowParsedLine {
                 actual_line: line.to_string(),
                 all_spaces: spaces_found,
                 statements_before: statements_before.clone(),
-                placement: Option(i as i32),
+                placement: Some(i as i32),
             });
 
             if line_type.type_id() == CodeType::Statement.type_id(){
@@ -85,7 +96,7 @@ impl ShallowParsedLine {
                     actual_line: line.to_string(),
                     all_spaces: spaces_found,
                     statements_before: statements_before.clone(),
-                    placement: Option(i as i32),
+                    placement: Some(i as i32),
                 });
             }
         }
@@ -112,10 +123,10 @@ pub struct BaseVar {
     pub name: String,
     pub value: String,
     pub annotation: Option<String>,
-    pub owner: ShallowParsedLine,
+    pub owner: Option<BaseStatement>,
 }
 
-// implementation of the From trait<ShallowParsedLine>, not much else.
+// rust only functions
 impl BaseVar {
         pub fn from(shallow_var: ShallowParsedLine) -> Result<BaseVar, NotVarError> {
             if shallow_var.line_code_type.type_id() != CodeType::Variable.type_id() {
@@ -134,13 +145,23 @@ impl BaseVar {
             if name.contains(":") {annotation = Some(name[name.find(":").unwrap()..].to_string());}
             else {annotation = None;}
 
-            let mut owner: ShallowParsedLine = ShallowParsedLine::empty(Some("global".to_string()));
+            let mut owner: Option<BaseStatement> = None;
 
             for statement in shallow_var.statements_before{
                 if statement.all_spaces >= shallow_var.all_spaces {continue;}
 
                 if statement.actual_line.contains("class") || statement.actual_line.contains("def"){
-                    owner = statement;
+                    let new_owner: Result<BaseStatement, NotStatementError> = BaseStatement::from(statement);
+                    match new_owner {
+                        Err(statement_error) => {
+                            return Err(NotVarError (format!("the owner returned an error:\n{}", statement_error)))
+                        }
+                        Ok(new_statement) => {
+                            owner = Some(new_statement);
+                        }
+                    }
+
+
                     break;
                 }
             }
@@ -151,15 +172,103 @@ impl BaseVar {
                 owner: owner,
             })
     }
+    pub fn new(name: String, value: String, annotation: Option<String>, owner: Option<BaseStatement>) -> BaseVar {
+        return BaseVar {
+            name: name,
+            value: value,
+            annotation: annotation,
+            owner: owner,
+        }
+    }
 }
-#[derive(Clone, Debug)]
-#[pyclass]
-enum StatementType {
-    Import, For, If, Elif, Else,
-    Async, Def, Try, Except, Finally,
-    While, Class,
+// python and rust functions
+#[pymethods]
+impl BaseVar {
+    pub fn name(&self) -> String {return self.name.clone();}
+    pub fn value(&self) -> String {return self.value.clone();}
+    pub fn annotation(&self) -> Option<String> {return self.annotation.clone();}
+    pub fn owner(&self) -> Option<BaseStatement> {return self.owner.clone();}
 }
 
+// every type of statement
+#[derive(Debug, Clone)]
+#[pyclass]
+pub enum StatementType {
+    For, While, Import, Try, Except, If,
+    Else, Elif, With, Class, Finally,
+}
+
+// rust only functions
+impl StatementType{
+    pub fn from(word: &str) -> Result<StatementType, NotStatementError> {
+        match word {
+            "if" => {Ok(StatementType::If)}
+            "while" => {Ok(StatementType::While)}
+            "else" => {Ok(StatementType::Else)}
+            "elif" => {Ok(StatementType::Elif)}
+            "for" => {Ok(StatementType::For)}
+            "with" => {Ok(StatementType::With)}
+            "class" => {Ok(StatementType::Class)}
+            "try" => {Ok(StatementType::Try)}
+            "except" => {Ok(StatementType::Except)}
+            "finally" => {Ok(StatementType::Finally)}
+            _ => {Err(NotStatementError ("could not parse the statement type".to_string()))}
+        }
+    }
+}
+
+// the basic statement structure
+#[derive(Debug, Clone)]
+#[pyclass]
 pub struct BaseStatement {
     pub statement_type: StatementType,
+    pub statement_variables: Vec<String>,
+    pub is_async: bool,
+    pub owner: Option<Box<BaseStatement>>,
+}
+
+// rust only functions
+impl BaseStatement {
+    pub fn from(line: ShallowParsedLine) -> Result<BaseStatement, NotStatementError> {
+        let line_words = line.actual_line.split_whitespace();
+
+        let mut is_async: bool = false;
+        let statement_type = if line_words.clone().next().unwrap() == "async" {
+            is_async = true;
+            StatementType::from(line_words.clone().nth(0).unwrap())}
+        else {
+            StatementType::from(line_words.clone().nth(1).unwrap())
+        };
+        if statement_type.is_err() {return Err(statement_type.unwrap_err())}
+        let statement_type = statement_type.unwrap();
+        let mut owner: Option<Box<BaseStatement>> = None;
+        for statement in line.statements_before{
+                if statement.all_spaces >= line.all_spaces {continue;}
+
+                if statement.actual_line.contains("class") || statement.actual_line.contains("def"){
+                    let new_owner: Result<BaseStatement, NotStatementError> = BaseStatement::from(statement);
+                    match new_owner {
+                        Err(error) => {
+                            return Err(NotStatementError ("found an invalid owner".to_string()))
+                        }
+                        Ok(new_statement) => {
+                            owner =Some(Box::new(new_statement));
+                        }
+                    }
+                    break;
+                }
+            }
+        let mut statement_variables: Vec<String> = Vec::new();
+        for (i, word) in line_words.enumerate() {
+            if i == 0 {continue}
+            if is_async && (i as i32) == 1 {continue}
+            statement_variables.push(word.to_string());
+        }
+        return Ok(BaseStatement {
+            statement_type: statement_type,
+            statement_variables:  statement_variables,
+            is_async: is_async,
+            owner: owner,
+        })
+    }
 }
