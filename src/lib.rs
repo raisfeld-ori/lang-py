@@ -1,24 +1,41 @@
-use pyo3::prelude::*;
-use pyo3::wrap_pymodule;
-use crate::base_parser::*;
-use crate::errors::*;
-use crate::outputs::*;
-
 mod base_parser;
 mod errors;
 mod outputs;
 
+use std::process::Output;
+use pyo3::prelude::*;
+use pyo3::wrap_pymodule;
+use tokio::runtime::Builder;
+use pyo3::exceptions::PyBaseException;
+use tokio::sync::mpsc;
+use std::thread;
+use crate::base_parser::*;
+use crate::errors::*;
+use crate::outputs::*;
+
 #[pyfunction]
-fn initial_parse(text: String) -> PyResult<BaseOutput> {
-    /*
-    the initial parse takes in the raw python code, does a shallow parse,
-    returns any error it finds. if no error were found, it parses the output of the shallow parse
-    and returns the different components of the code.
-     */
-    let shallow_code = ShallowParsedLine::from_pycode(text);
-    return Ok(BaseOutput::from(shallow_code));
+// takes in raw python code, parses it into variables, statements, executables, and unknown.
+fn initial_parse(text: String) -> PyResult<()> {
+    let runner = Builder::new_multi_thread().build().unwrap();
+    let output = thread::spawn(move ||{
+        runner.block_on(async move {
+            let shallow_code  = ShallowParsedLine::from(text).await;
+            // create_base_output(shallow_code).await
+        })
+    });
+    return Ok(output.join().unwrap());
 }
 
+
+// all classes python calls explicitly
+#[pymodule]
+fn classes(_py: Python, module: &PyModule) -> PyResult<()> {
+
+    module.add_class::<AllOutputs>()?;
+    Ok(())
+}
+
+// the functions for parsing the python code
 #[pymodule]
 fn parse(_py: Python, module: &PyModule) -> PyResult<()> {
     /*
@@ -32,11 +49,12 @@ fn parse(_py: Python, module: &PyModule) -> PyResult<()> {
 
 // the header file for all rust code.
 #[pymodule]
-fn rust_header(_py: Python, module: &PyModule) -> PyResult<()> {
+fn compiler(_py: Python, module: &PyModule) -> PyResult<()> {
     /*
     the header module. all other modules and functions are 'Pymodules' or 'Pyfunctions'
     that belong to this part
      */
     module.add_wrapped(wrap_pymodule!(parse))?;
+    module.add_wrapped(wrap_pymodule!(classes))?;
     Ok(())
 }

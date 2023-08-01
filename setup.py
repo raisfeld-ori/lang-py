@@ -9,6 +9,7 @@ with open("readme.md", "r") as readme:
         package_dir={"": "code"},
         packages=find_packages(where="code"),
         long_description=readme.read(),
+        keywords=["compile", "compiler", "language", "installer"],
         long_description_content_type="text/markdown",
         install_requires=["windows-curses >= 2.3.1", "maturin >= 1.1.0"],
         extras_require={"dev": ["twine>=4.0.2"]},

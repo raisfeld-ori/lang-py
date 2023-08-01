@@ -57,6 +57,7 @@ class Window:
     def exit(self, state: int = 0):
         self.std.addstr("\npress enter to exit\n")
         self.std.getch()
+        curses.endwin()
         sys.exit(state)
 
 class Console:
@@ -81,7 +82,7 @@ class Console:
         self.SUCCESS_COLOR = curses.color_pair(4)
         self.warnings = 0
 
-        self.output = self._handle_args(argv)
+        self._handle_args(argv)
 
     def warn(self, error: Exception | str, with_traceback: bool = False, suggestion: str = None):
         previous_color = self.window.current_color
@@ -140,14 +141,23 @@ class Console:
         self.log("warnings: ", self.warnings)
 
         self.window.exit(state)
+    @property
+    def debug(self):
+        class Debug:
+            def exit_curses(self):
+                curses.endwin()
+            def enter_curses(self):
+                curses.initscr()
 
+        return Debug()
 
     def _handle_args(self, argv: list[str]) -> str:
         """
         handle args is just
         """
         if len(argv) == 1:
-            return cases.Default.value
+            self.log(cases.Default.value)
+            self.graceful_exit(0)
 
         self.file = None
 
@@ -179,4 +189,4 @@ class Console:
         except FileNotFoundError:
             self.panic(FileNotFoundError(f"could not open {self.file}"), suggestion="try using the absolute location of the file", with_traceback=True)
         except Exception as error:
-            self.panic(error)
+            self.panic(error, with_traceback=True)
