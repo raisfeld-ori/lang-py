@@ -5,9 +5,7 @@ this way it's far easier to find specific errors.
  */
 
 use pyo3::prelude::*;
-use std::fmt::{Display, Formatter};
-use std::ops::Not;
-use pyo3::{PyErr, PyTypeInfo};
+use pyo3::PyErr;
 
 
 pub trait HandledError {

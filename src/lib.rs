@@ -2,15 +2,11 @@ mod base_parser;
 mod errors;
 mod outputs;
 
-use std::process::Output;
 use pyo3::prelude::*;
 use pyo3::wrap_pymodule;
 use tokio::runtime::Builder;
-use pyo3::exceptions::PyBaseException;
-use tokio::sync::mpsc;
 use std::thread;
 use crate::base_parser::*;
-use crate::errors::*;
 use crate::outputs::*;
 
 #[pyfunction]
