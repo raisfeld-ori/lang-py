@@ -10,12 +10,14 @@ import sys
 from enum import Enum, auto
 import traceback
 
-class repr_methods(Enum):
+
+class ReprMethods(Enum):
     repr = auto()
     to_str = auto()
     name = auto()
 
-class cases(Enum):
+
+class Cases(Enum):
     Default = """
     the lang-py-compiler.
     use lang-py-compiler --help for more info
@@ -37,8 +39,10 @@ class cases(Enum):
         the compiler is in beta, and is bound to have a lot of errors and bugs
     
     """
+
+
 class Window:
-    def __init__(self, std: curses.window, std_color = curses.COLOR_WHITE):
+    def __init__(self, std: curses.window, std_color=curses.COLOR_WHITE):
         self.std = std
         self.std.clear()
         self.std.refresh()
@@ -47,9 +51,12 @@ class Window:
     def write(self, obj: str):
         try:
             self.std.addstr(obj, self.current_color)
+            self.std.clear()
         except Exception as error:
-            self.__init__(self.std, self.current_color)
-            self.write(f"(got error: {error})\n")
+            self.std.clear()
+            self.std.addstr("failed to log file, printing it instead")
+            print("got the following error while attempting to log: ", error)
+            print("here is the object that was supposed to print out: \n", obj)
 
     def edit_color(self, new_color):
         self.current_color = new_color
@@ -59,6 +66,7 @@ class Window:
         self.std.getch()
         curses.endwin()
         sys.exit(state)
+
 
 class Console:
     def __init__(self, argv: list[str]):
@@ -97,10 +105,8 @@ class Console:
         if suggestion:
             self.log(suggestion)
 
-
         self.window.edit_color(previous_color)
         self.warnings += 1
-
 
     def panic(self, error: Exception | str, with_traceback: bool = False, suggestion: str = None):
         try:
@@ -114,59 +120,53 @@ class Console:
                 self.log(error.__class__.__name__, ": ", error.args[0])
             self.window.edit_color(self.SUCCESS_COLOR)
             if suggestion:
-                self.log("suggestion -> ",suggestion)
+                self.log("suggestion -> ", suggestion)
             self.window.exit(1)
         except Exception as error:
             self.log(error)
 
-    def log(self, *args, end: str = "\n", method: repr_methods = repr_methods.repr ) -> None:
+    def log(self, *args, end: str = "\n", method: ReprMethods = ReprMethods.repr) -> None:
         try:
             for arg in args:
                 if type(arg) == str:
                     self.window.write(arg)
                     continue
                 match method:
-                    case repr_methods.repr:
+                    case ReprMethods.repr:
                         self.window.write(f"{arg}")
-                    case repr_methods.to_str:
+                    case ReprMethods.to_str:
                         self.window.write(str(arg))
-                    case repr_methods.name:
+                    case ReprMethods.name:
                         self.window.write(arg.__name__)
 
             self.window.write(end)
         except Exception as error:
             self.panic(error, with_traceback=False, suggestion="try using another repr method")
+
     def graceful_exit(self, state: int = 0):
         self.window.edit_color(self.SUCCESS_COLOR)
         self.log("warnings: ", self.warnings)
 
         self.window.exit(state)
-    @property
-    def debug(self):
-        class Debug:
-            def exit_curses(self):
-                curses.endwin()
-            def enter_curses(self):
-                curses.initscr()
 
-        return Debug()
-
-    def _handle_args(self, argv: list[str]) -> str:
+    def _handle_args(self, argv: list[str]):
         """
         handle args is just
         """
         if len(argv) == 1:
-            self.log(cases.Default.value)
-            self.graceful_exit(0)
+            self.log(Cases.Default.value)
+            self.graceful_exit()
 
         self.file = None
 
         for arg in argv:
             match arg:
                 case "--help":
-                    return cases.Help.value
+                    self.log(Cases.Help.value)
+                    self.graceful_exit(0)
                 case "-h":
-                    return cases.Help.value
+                    self.log(Cases.Help.value)
+                    self.graceful_exit(0)
                 case "-py":
                     self.file = argv[1]
                 case _:
@@ -176,17 +176,16 @@ class Console:
         if not self.file:
             self.panic("no file given", suggestion="try using -py if you're using the python interpreter")
 
-
-    def open_file(self, new_file: str = None) -> str | Exception:
+    def open_file(self) -> str | Exception:
         """
-        tries to open self.file from __init__
+        tries to open the file from __init__
         """
-        if new_file:
-            self.file = new_file
         try:
             with open(self.file, 'r') as file:
                 return file.read()
         except FileNotFoundError:
-            self.panic(FileNotFoundError(f"could not open {self.file}"), suggestion="try using the absolute location of the file", with_traceback=True)
+            self.panic(FileNotFoundError(f"could not open {self.file}"),
+                       suggestion="try using the absolute location of the file",
+                       with_traceback=True)
         except Exception as error:
             self.panic(error, with_traceback=True)
