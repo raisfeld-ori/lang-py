@@ -6,8 +6,9 @@ the name and value of a variable etc.
 use std::any::Any;
 use pyo3::prelude::*;
 use crate::errors::*;
-use tokio::task::spawn;
-use tokio::sync::Mutex;
+use tokio::task::{JoinHandle, spawn};
+use tokio::sync::RwLock;
+use std::sync::Arc;
 use PyErr;
 
 
@@ -81,19 +82,23 @@ async fn from_parse(i: usize, line: String) -> ShallowParsedLine {
 }
 impl ShallowParsedLine {
     pub async fn from(python_code: String) -> Vec<ShallowParsedLine> {
-        let result: Mutex<Vec<ShallowParsedLine>>  = Mutex::new(Vec::new());
+        let mut threads:  Vec<JoinHandle<()>> = Vec::new();
+        let result: Arc<RwLock<Vec<ShallowParsedLine>>> = Arc::new(RwLock::new(Vec::new()));
 
         for (i, line) in python_code.lines().enumerate().clone() {
             let i_owned = i.to_owned();
             let line_owned = line.to_owned();
-            let mut result = result.lock().await.to_owned();
-            spawn(async move{
+            let result = result.clone();
+            threads.push(spawn(async move{
                 let shallow_line = from_parse(i_owned, line_owned).await;
-                result.push(shallow_line);
-            });
+                result.write().await.push(shallow_line);
+            }));
         }
-        let result = result.into_inner();
-        return result;
+        for thread in threads{
+            thread.await.unwrap();
+        }
+        let result = result.read().await;
+        return result.clone();
     }
 
     pub fn empty(code: Option<String>) -> ShallowParsedLine {
@@ -117,6 +122,7 @@ pub struct BaseVar {
 }
 
 // rust only functions
+#[allow(unused_assignments)]
 impl BaseVar {
         pub fn from(shallow_var: ShallowParsedLine) -> PyResult<BaseVar> {
             if shallow_var.line_code_type.type_id() != CodeType::Variable.type_id() {
@@ -197,6 +203,7 @@ impl StatementType{
 pub struct BaseStatement {
     pub statement_type: StatementType,
     pub statement_variables: Vec<String>,
+    pub actual_line: String,
     pub is_async: bool,
 }
 
@@ -204,6 +211,7 @@ pub struct BaseStatement {
 impl BaseStatement {
     pub fn statement_type(&self) -> StatementType {self.statement_type.clone()}
     pub fn statement_variables(&self) -> Vec<String> {self.statement_variables.clone()}
+    pub fn actual_line(&self) -> String {self.actual_line.clone()}
     pub fn is_async(&self) -> bool {self.is_async}
 }
 
@@ -231,10 +239,12 @@ impl BaseStatement {
         return Ok(BaseStatement {
             statement_type: statement_type,
             statement_variables:  statement_variables,
+            actual_line: line.actual_line.clone(),
             is_async: is_async,
         })
     }
 }
+#[allow(dead_code)]
 pub enum ExecutableType {
     Variable (String),
     Function (String),
@@ -253,6 +263,7 @@ impl BaseExecutable {
     pub fn components(&self) -> Vec<String> {self.components.clone()}
 }
 
+#[allow(unused_variables)]
 impl BaseExecutable {
     pub fn from(line: ShallowParsedLine) -> PyResult<BaseExecutable> {
         let components = line.actual_line

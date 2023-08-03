@@ -11,15 +11,15 @@ use crate::outputs::*;
 
 #[pyfunction]
 // takes in raw python code, parses it into variables, statements, executables, and unknown.
-fn initial_parse(text: String) -> PyResult<()> {
+fn initial_parse(text: String) -> PyResult<BaseOutput> {
     let runner = Builder::new_multi_thread().build().unwrap();
     let output = thread::spawn(move ||{
         runner.block_on(async move {
             let shallow_code  = ShallowParsedLine::from(text).await;
-            // create_base_output(shallow_code).await
+            create_base_output(shallow_code).await
         })
     });
-    return Ok(output.join().unwrap());
+    return output.join().unwrap();
 }
 
 
