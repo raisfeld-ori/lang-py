@@ -8,6 +8,7 @@ edition = "2021"
 name = "compiler"
 crate-type = ["cdylib"]
 
+
 [dependencies]
 pyo3 = {version = "*", features = ["full"]}
 tokio = {version = "*", features = ["full"]}

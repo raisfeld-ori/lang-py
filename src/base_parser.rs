@@ -28,10 +28,10 @@ Unknown - any line of code that has no effect on the rest of the code, therefore
 #[derive(Debug, Clone)]
 #[pyclass]
 pub enum CodeType{
-    Variable = 0,
-    Executable = 1,
-    Unknown = 2,
-    Statement = 3,
+    Variable,
+    Executable,
+    Unknown,
+    Statement,
 }
 
 
@@ -55,20 +55,20 @@ impl ShallowParsedLine {
 
 // part of the from function, but it takes a lot of space, so i added it here
 async fn from_parse(i: usize, line: String) -> ShallowParsedLine {
-    let mut line_type: CodeType = CodeType::Unknown;
-    let first_word: Vec<&str> = line.trim_start().split(" ").collect::<Vec<&str>>();
-    let first_word: Option<&&str> = first_word.iter().nth(0);
-    if line.ends_with(")") && line_type.type_id() == CodeType::Unknown.type_id() { line_type = CodeType::Executable }
-    if !first_word.is_none() && STATEMENTS.contains(first_word.unwrap()) { line_type = CodeType::Statement; }
+    let mut line_type = CodeType::Unknown;
+    if line.ends_with(")") { line_type = CodeType::Executable; }
+    let first_word =
+
 
     if line.contains("=") {
         let first_equation: usize = line.find("=").unwrap();
-        if line.chars().nth(first_equation + 1 as usize).unwrap() != '=' {
-            if !OPERATORS.contains(&line.chars().nth(first_equation - 1 as usize).unwrap()) {
+        if line.chars().nth(first_equation + 1).unwrap() != '=' {
+            if !OPERATORS.contains(&line.chars().nth(first_equation - 1).unwrap()) {
                 line_type = CodeType::Variable;
             };
         }
     }
+
     let mut spaces_found: i32 = 0;
     for letter in line.chars() {
         if letter == ' ' { spaces_found += 1; } else { break }

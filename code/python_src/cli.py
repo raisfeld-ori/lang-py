@@ -46,17 +46,32 @@ class Window:
         self.std = std
         self.std.clear()
         self.std.refresh()
+        self.std.keypad(True)
         self.current_color = std_color
 
-    def write(self, obj: str):
+    def cls(self):
+        self.std.clear()
+        self.std.refresh()
+
+    @staticmethod
+    def hide():
+        curses.endwin()
+
+    @staticmethod
+    def show():
+        curses.initscr()
+
+    def write(self, obj: str) -> Exception:
         try:
             self.std.addstr(obj, self.current_color)
-            self.std.clear()
         except Exception as error:
             self.std.clear()
-            self.std.addstr("failed to log file, printing it instead")
-            print("got the following error while attempting to log: ", error)
-            print("here is the object that was supposed to print out: \n", obj)
+            self.std.refresh()
+            self.write("< could not write to the std window >\n")
+            return error
+
+    def input(self) -> str:
+        return self.std.getstr().decode()
 
     def edit_color(self, new_color):
         self.current_color = new_color
@@ -77,7 +92,11 @@ class Console:
         result for every one of them
         """
         curses.initscr()
+        curses.cbreak()
+        curses.raw()
+        curses.noecho()
         self.window = curses.wrapper(Window)
+        self.window.std.keypad(True)
         self.height, self.width = self.window.std.getmaxyx()
         curses.resize_term(self.height, self.width)
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
@@ -90,9 +109,19 @@ class Console:
         self.SUCCESS_COLOR = curses.color_pair(4)
         self.warnings = 0
 
+        self.print_log_errs = False
+        self.print_too_large = False
+
         self._handle_args(argv)
 
     def warn(self, error: Exception | str, with_traceback: bool = False, suggestion: str = None):
+        """
+        like panic, but doesn't close the application
+        :param error: the error you want to warn about
+        :param with_traceback: whether you want to show traceback or not
+        :param suggestion: an extra line of what could solve the issue
+        :return: nothing
+        """
         previous_color = self.window.current_color
         self.window.edit_color(self.WARNING_COLOR)
         if with_traceback:
@@ -109,6 +138,13 @@ class Console:
         self.warnings += 1
 
     def panic(self, error: Exception | str, with_traceback: bool = False, suggestion: str = None):
+        """
+        logs an error in red, and then exits the application
+        :param error: the error you want to panic about
+        :param with_traceback: like the name says, determines if to show traceback or not
+        :param suggestion: an extra line of what could solve the issue
+        :return: nothing
+        """
         try:
             self.window.edit_color(self.ERROR_COLOR)
             if with_traceback:
@@ -125,23 +161,84 @@ class Console:
         except Exception as error:
             self.log(error)
 
-    def log(self, *args, end: str = "\n", method: ReprMethods = ReprMethods.repr) -> None:
+    def log(self, *args, end: str = "\n", method: ReprMethods = ReprMethods.repr):
+        """
+        similar to print, but for curses instead
+        :param args:
+        the thing you want to print out
+        :param end:
+        how the print function will end
+        :param method:
+        curses only allows to write str objects,
+        so you can select what method to turn the object into str
+        (Repr is the normal method that python does)
+        :return nothing
+        """
         try:
             for arg in args:
+                fail = None
                 if type(arg) == str:
-                    self.window.write(arg)
-                    continue
-                match method:
-                    case ReprMethods.repr:
-                        self.window.write(f"{arg}")
-                    case ReprMethods.to_str:
-                        self.window.write(str(arg))
-                    case ReprMethods.name:
-                        self.window.write(arg.__name__)
+                    fail = self.window.write(arg)
+                else:
+                    match method:
+                        case ReprMethods.repr:
+                            fail = self.window.write(f"{arg}")
+                        case ReprMethods.to_str:
+                            fail = self.window.write(str(arg))
+                        case ReprMethods.name:
+                            fail = self.window.write(arg.__name__)
+                if fail:
+                    self.window.write("")
+                    if self.print_too_large:
+                        print(arg)
+                    if self.print_log_errs:
+                        print(fail)
 
             self.window.write(end)
         except Exception as error:
             self.panic(error, with_traceback=False, suggestion="try using another repr method")
+
+    def select(self, question: str, options: list[str], return_int: bool = True) -> str | int:
+        """
+        allows to select from multiple options
+        :param question:
+        :param options:
+        :param return_int:
+        :return:
+        """
+        self.window.cls()
+        if len(options) < 2:
+            raise ValueError("console.select must include more then 2 options")
+
+        selected = 0
+        while True:
+            self.log(question, "\n")
+            for i, option in enumerate(options):
+                if i == selected:
+                    self.window.edit_color(self.WARNING_COLOR)
+                    self.log(">", end="")
+                self.log(option)
+                self.window.edit_color(self.NORMAL_COLOR)
+            key = self.window.std.getch()
+            if key == curses.KEY_UP:
+                selected -= 1 if selected > 0 else 0
+            elif key == curses.KEY_DOWN:
+                selected += 1 if selected + 1 != len(options) else 0
+            elif key == curses.KEY_ENTER or key == 13:
+                self.window.cls()
+                return selected if return_int else  options[selected]
+            self.window.cls()
+
+    def debug(
+            self, print_log_errs: bool = False,
+            print_too_large: bool = False):
+        """
+        :param print_log_errs: if an error happens while logging, print it
+        :param print_too_large: if something is too large for the console, print it
+        :return: nothing
+        """
+        self.print_log_errs = print_log_errs
+        self.print_too_large = print_too_large
 
     def graceful_exit(self, state: int = 0):
         self.window.edit_color(self.SUCCESS_COLOR)
@@ -151,7 +248,8 @@ class Console:
 
     def _handle_args(self, argv: list[str]):
         """
-        handle args is just
+        handles the arguments for what should print out
+        :parm argv: takes in sys.argv, so that custom handles are possible before this
         """
         if len(argv) == 1:
             self.log(Cases.Default.value)

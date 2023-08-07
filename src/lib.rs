@@ -28,6 +28,7 @@ fn initial_parse(text: String) -> PyResult<BaseOutput> {
 fn classes(_py: Python, module: &PyModule) -> PyResult<()> {
 
     module.add_class::<AllOutputs>()?;
+    module.add_class::<BaseOutput>()?;
     Ok(())
 }
 
