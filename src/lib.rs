@@ -1,6 +1,8 @@
 mod base_parser;
 mod errors;
 mod outputs;
+mod syntax_tree;
+
 
 use pyo3::prelude::*;
 use pyo3::wrap_pymodule;

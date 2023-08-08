@@ -34,7 +34,7 @@ impl BaseOutput{
 }
 
 pub async fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<BaseOutput>{
-    let mut threads: Vec<JoinHandle<()>> = Vec::new();
+    let mut threads: Vec<JoinHandle<Option<PyErr>>> = Vec::new();
     let variables: Arc<RwLock<Vec<(BaseVar, i32)>>> = Arc::new(RwLock::new(Vec::new()));
     let statements: Arc<RwLock<Vec<(BaseStatement, i32)>>> = Arc::new(RwLock::new(Vec::new()));
     let executables: Arc<RwLock<Vec<(BaseExecutable, i32)>>> = Arc::new(RwLock::new(Vec::new()));
@@ -50,22 +50,31 @@ pub async fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResul
         threads.push(spawn(async move{
             match shallow_line.line_code_type {
                 CodeType::Variable => {
-                    variables.write().unwrap().push((BaseVar::from(shallow_line.to_owned()).unwrap(), i_owned));
+                    let variable = BaseVar::from(shallow_line.to_owned());
+                    if variable.is_err() {return Some(variable.unwrap_err())}
+                    variables.write().unwrap().push((variable.unwrap(), i_owned));
                 }
                 CodeType::Statement => {
-                    statements.write().unwrap().push((BaseStatement::from(shallow_line.to_owned()).unwrap(), i_owned));
+                    let statement = BaseStatement::from(shallow_line.to_owned());
+                    if statement.is_err() {return Some(statement.unwrap_err())}
+                    statements.write().unwrap().push((statement.unwrap(), i_owned));
                 }
                 CodeType::Executable => {
-                    executables.write().unwrap().push((BaseExecutable::from(shallow_line.to_owned()).unwrap(), i_owned));
+                    let executable = BaseExecutable::from(shallow_line.to_owned());
+                    if executable.is_err() {return Some(executable.unwrap_err())}
+                    executables.write().unwrap().push((executable.unwrap(), i_owned));
                 }
                 CodeType::Unknown => {unknown.write().unwrap().push((shallow_line.to_owned(), i_owned));}
             };
+            return None;
         }));
     }
 
     for thread in threads {
-        thread.await.unwrap();
+        let error = thread.await.unwrap();
+        if error.is_some() {return Err(error.unwrap())}
     }
+
 
     let variables = variables.read().unwrap();
     let statements = statements.read().unwrap();

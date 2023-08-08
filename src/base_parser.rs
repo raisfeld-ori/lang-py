@@ -57,8 +57,9 @@ impl ShallowParsedLine {
 async fn from_parse(i: usize, line: String) -> ShallowParsedLine {
     let mut line_type = CodeType::Unknown;
     if line.ends_with(")") { line_type = CodeType::Executable; }
-    let first_word =
+    let first_word = line.clone().split_whitespace().next().unwrap_or("").replace(":", "");
 
+    if STATEMENTS.contains(&first_word.as_str()) { line_type = CodeType::Statement; }
 
     if line.contains("=") {
         let first_equation: usize = line.find("=").unwrap();
@@ -119,6 +120,7 @@ pub struct BaseVar {
     pub name: String,
     pub value: String,
     pub annotation: Option<String>,
+    pub actual_line: String,
 }
 
 // rust only functions
@@ -142,21 +144,15 @@ impl BaseVar {
             let value: String = shallow_var.actual_line[break_point+1..].to_string();
 
             let mut annotation: Option<String> = Some(String::new());
-            if name.contains(":") {annotation = Some(name[name.find(":").unwrap()..].to_string());}
+            if name.contains(":") {annotation = Some(name[name.find(":").unwrap() + 2..].to_string());}
             else {annotation = None;}
 
             return Ok(BaseVar {
                 name: name,
                 value: value,
                 annotation: annotation,
+                actual_line: shallow_var.actual_line,
             })
-    }
-    pub fn new(name: String, value: String, annotation: Option<String>) -> BaseVar {
-        return BaseVar {
-            name: name,
-            value: value,
-            annotation: annotation,
-        }
     }
 }
 // python and rust functions
@@ -165,6 +161,7 @@ impl BaseVar {
     pub fn name(&self) -> String {return self.name.clone();}
     pub fn value(&self) -> String {return self.value.clone();}
     pub fn annotation(&self) -> Option<String> {return self.annotation.clone();}
+    pub fn actual_line(&self) -> String {return self.actual_line.clone()}
 }
 
 // every type of statement
@@ -192,7 +189,8 @@ impl StatementType{
             "finally" => {Ok(StatementType::Finally)}
             "def" => {Ok(StatementType::Import)}
             "from" => {Ok(StatementType::From)}
-            _ => {Err(NotStatementError::from("could not parse the statement type").to_pyerr())}
+            _ => {Err(NotStatementError::from(
+                format!("could not parse the statement type {}", word)).to_pyerr())}
         }
     }
 }
@@ -220,13 +218,18 @@ impl BaseStatement {
     pub fn from(line: ShallowParsedLine) -> Result<BaseStatement, PyErr> {
         let line_words = line.actual_line.split_whitespace();
 
-
         let mut is_async: bool = false;
-        let statement_type = if line_words.clone().next().unwrap() == "async" {
+        let first_word = line_words.to_owned().next().unwrap().replace(":", "");
+        let statement_type = if first_word == "async" {
             is_async = true;
-            StatementType::from(line_words.clone().nth(1).unwrap())}
+            StatementType::from(line_words.to_owned().nth(1).unwrap())}
         else {
-            StatementType::from(line_words.clone().nth(0).unwrap())
+            StatementType::from(line_words
+                .clone()
+                .nth(0)
+                .unwrap_or("<no word>")
+                .replace(":", "")
+                .as_str())
         };
         if statement_type.is_err() {return Err(statement_type.unwrap_err())}
         let statement_type = statement_type.unwrap();
@@ -253,13 +256,13 @@ pub enum ExecutableType {
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct BaseExecutable {
-    actual_line: ShallowParsedLine,
+    actual_line: String,
     components: Vec<String>,
 }
 
 #[pymethods]
 impl BaseExecutable {
-    pub fn actual_line(&self) -> ShallowParsedLine {self.actual_line.clone()}
+    pub fn actual_line(&self) -> String {self.actual_line.clone()}
     pub fn components(&self) -> Vec<String> {self.components.clone()}
 }
 
@@ -271,8 +274,8 @@ impl BaseExecutable {
             .map(|component| component.to_string())
             .collect::<Vec<String>>();
         return Ok(BaseExecutable {
-            actual_line: line,
-            components: Vec::new(),
+            actual_line: line.actual_line,
+            components: components,
         });
     }
 }

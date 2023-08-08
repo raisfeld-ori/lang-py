@@ -9,12 +9,12 @@
   <component name="ChangeListManager">
     <list default="true" id="ce942fcf-f242-4970-b8fe-f665bdb272a9" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/python_src/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/python_src/cli.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/python_src/rust_wrapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/python_src/rust_wrapper.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/base_parser.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/base_parser.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/errors.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/errors.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/outputs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/outputs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/example.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,7 +62,7 @@
       <recent name="C:\Users\oriri\Desktop\projects\lang-py-compiler\code" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.test_example">
+  <component name="RunManager" selected="Python.main">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python">
       <module name="lang-py-compiler" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -78,7 +78,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/code/main.py" />
-      <option name="PARAMETERS" value="C:\Users\oriri\Desktop\projects\lang-py-compiler\tests\example2.py -py" />
+      <option name="PARAMETERS" value="C:\Users\oriri\Desktop\projects\lang-py-compiler\tests\example.py -py" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="true" />
       <option name="MODULE_MODE" value="false" />

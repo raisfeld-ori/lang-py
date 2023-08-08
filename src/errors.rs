@@ -4,6 +4,7 @@ errors in rust take a lot of space, so i just added them all to this file,
 this way it's far easier to find specific errors.
  */
 
+use pyo3::exceptions::PyBaseException;
 use pyo3::prelude::*;
 use pyo3::PyErr;
 
@@ -33,7 +34,7 @@ impl HandledError for NotVarError{
         }
         traceback.push_str(self.0.to_string().as_str());
 
-        return PyErr::new::<PyAny, String>(traceback);
+        return PyErr::new::<PyBaseException, String>(traceback);
     }
 }
 
@@ -63,7 +64,7 @@ impl HandledError for NotStatementError{
         }
         traceback.push_str(self.0.to_string().as_str());
 
-        return PyErr::new::<PyAny, String>(traceback);
+        return PyErr::new::<PyBaseException, String>(traceback);
     }
 }
 
@@ -91,6 +92,6 @@ impl HandledError for FailedOutputError{
         }
         traceback.push_str(self.0.to_string().as_str());
 
-        return PyErr::new::<PyAny, String>(traceback);
+        return PyErr::new::<PyBaseException, String>(traceback);
     }
 }
