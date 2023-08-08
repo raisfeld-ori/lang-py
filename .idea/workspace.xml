@@ -8,13 +8,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ce942fcf-f242-4970-b8fe-f665bdb272a9" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/python_src/rust_wrapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/python_src/rust_wrapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/base_parser.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/base_parser.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/errors.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/errors.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/outputs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/outputs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/example.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/types.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/syntax_tree.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/objects.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,6 +21,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Python Script" />
+        <option value="Rust File" />
       </list>
     </option>
   </component>

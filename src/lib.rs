@@ -1,7 +1,8 @@
 mod base_parser;
 mod errors;
 mod outputs;
-mod syntax_tree;
+mod objects;
+mod types;
 
 
 use pyo3::prelude::*;
