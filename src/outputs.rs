@@ -21,6 +21,7 @@ pub struct BaseOutput {
     pub variables: Vec<(BaseVar, i32)>,
     pub executables: Vec<(BaseExecutable, i32)>,
     pub unknown: Vec<(ShallowParsedLine, i32)>,
+    pub shallow_code: Vec<ShallowParsedLine>,
 }
 
 #[pymethods]
@@ -31,6 +32,7 @@ impl BaseOutput{
     pub fn variables(&self) -> Vec<(BaseVar, i32)> {self.variables.clone()}
     pub fn executables(&self) -> Vec<(BaseExecutable, i32)> {self.executables.clone()}
     pub fn unknown(&self) -> Vec<(ShallowParsedLine, i32)> {self.unknown.clone()}
+    pub fn shallow_code(&self) -> Vec<ShallowParsedLine> { self.shallow_code.clone() }
 }
 
 pub async fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<BaseOutput>{
@@ -86,6 +88,7 @@ pub async fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResul
         statements: statements.clone(),
         executables: executables.clone(),
         unknown: unknown.clone(),
+        shallow_code: shallow_code.clone(),
         }
     )
 }

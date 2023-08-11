@@ -9,6 +9,7 @@ use crate::errors::*;
 use tokio::task::{JoinHandle, spawn};
 use tokio::sync::RwLock;
 use std::sync::Arc;
+use crate::base_types::StatementType;
 use PyErr;
 
 
@@ -164,44 +165,13 @@ impl BaseVar {
     pub fn actual_line(&self) -> String {return self.actual_line.clone()}
 }
 
-// every type of statement
-#[derive(Debug, Clone)]
-#[pyclass]
-pub enum StatementType {
-    For, While, Import, Try, Except, If,
-    Else, Elif, With, Class, Finally, Def,
-    From
-}
-
-// rust only functions
-impl StatementType{
-    pub fn from(word: &str) -> PyResult<StatementType> {
-        match word {
-            "if" => {Ok(StatementType::If)}
-            "while" => {Ok(StatementType::While)}
-            "else" => {Ok(StatementType::Else)}
-            "elif" => {Ok(StatementType::Elif)}
-            "for" => {Ok(StatementType::For)}
-            "with" => {Ok(StatementType::With)}
-            "class" => {Ok(StatementType::Class)}
-            "try" => {Ok(StatementType::Try)}
-            "except" => {Ok(StatementType::Except)}
-            "finally" => {Ok(StatementType::Finally)}
-            "def" => {Ok(StatementType::Import)}
-            "from" => {Ok(StatementType::From)}
-            _ => {Err(NotStatementError::from(
-                format!("could not parse the statement type {}", word)).to_pyerr())}
-        }
-    }
-}
-
 // the basic statement structure
 #[derive(Debug, Clone)]
 #[pyclass]
 pub struct BaseStatement {
     pub statement_type: StatementType,
     pub statement_variables: Vec<String>,
-    pub actual_line: String,
+    pub actual_line: ShallowParsedLine,
     pub is_async: bool,
 }
 
@@ -209,7 +179,7 @@ pub struct BaseStatement {
 impl BaseStatement {
     pub fn statement_type(&self) -> StatementType {self.statement_type.clone()}
     pub fn statement_variables(&self) -> Vec<String> {self.statement_variables.clone()}
-    pub fn actual_line(&self) -> String {self.actual_line.clone()}
+    pub fn actual_line(&self) -> ShallowParsedLine {self.actual_line.clone()}
     pub fn is_async(&self) -> bool {self.is_async}
 }
 
@@ -242,7 +212,7 @@ impl BaseStatement {
         return Ok(BaseStatement {
             statement_type: statement_type,
             statement_variables:  statement_variables,
-            actual_line: line.actual_line.clone(),
+            actual_line: line,
             is_async: is_async,
         })
     }
@@ -256,13 +226,13 @@ pub enum ExecutableType {
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct BaseExecutable {
-    actual_line: String,
+    actual_line: ShallowParsedLine,
     components: Vec<String>,
 }
 
 #[pymethods]
 impl BaseExecutable {
-    pub fn actual_line(&self) -> String {self.actual_line.clone()}
+    pub fn actual_line(&self) -> ShallowParsedLine {self.actual_line.clone()}
     pub fn components(&self) -> Vec<String> {self.components.clone()}
 }
 
@@ -274,7 +244,7 @@ impl BaseExecutable {
             .map(|component| component.to_string())
             .collect::<Vec<String>>();
         return Ok(BaseExecutable {
-            actual_line: line.actual_line,
+            actual_line: line,
             components: components,
         });
     }

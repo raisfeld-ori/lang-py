@@ -1,11 +1,15 @@
 [package]
-name = "lang-py-compiler"
+name = "lang-py"
 version = "0.1.0"
+authors = ["ori raisfeld"]
 edition = "2021"
+license = "MIT"
+readme = "readme.md"
+keywords = ["compiler", "parser", "compiler-maker"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "compiler"
+name = "lang_py"
 crate-type = ["cdylib"]
 
 

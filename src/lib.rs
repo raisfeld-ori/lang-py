@@ -1,8 +1,7 @@
 mod base_parser;
 mod errors;
 mod outputs;
-mod objects;
-mod types;
+mod base_types;
 
 
 use pyo3::prelude::*;
@@ -11,9 +10,10 @@ use tokio::runtime::Builder;
 use std::thread;
 use crate::base_parser::*;
 use crate::outputs::*;
+use crate::base_types::{get_methods,BaseMethod};
 
-#[pyfunction]
 // takes in raw python code, parses it into variables, statements, executables, and unknown.
+#[pyfunction]
 fn initial_parse(text: String) -> PyResult<BaseOutput> {
     let runner = Builder::new_multi_thread().build().unwrap();
     let output = thread::spawn(move ||{
@@ -32,6 +32,8 @@ fn classes(_py: Python, module: &PyModule) -> PyResult<()> {
 
     module.add_class::<AllOutputs>()?;
     module.add_class::<BaseOutput>()?;
+    module.add_class::<BaseMethod>()?;
+    module.add_class::<ShallowParsedLine>()?;
     Ok(())
 }
 
@@ -44,12 +46,13 @@ fn parse(_py: Python, module: &PyModule) -> PyResult<()> {
     and returns a parsed code
      */
     module.add_wrapped(wrap_pyfunction!(initial_parse))?;
+    module.add_wrapped(wrap_pyfunction!(get_methods))?;
     Ok(())
 }
 
 // the header file for all rust code.
 #[pymodule]
-fn compiler(_py: Python, module: &PyModule) -> PyResult<()> {
+fn lang_py(_py: Python, module: &PyModule) -> PyResult<()> {
     /*
     the header module. all other modules and functions are 'Pymodules' or 'Pyfunctions'
     that belong to this part

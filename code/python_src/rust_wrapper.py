@@ -14,9 +14,23 @@ class BaseOutput:
         self.all: list = list(map(lambda arr: arr[0],
                               sorted(self.variables + self.statements + self.executables + self.unknown,
                               key=lambda tp: tp[1])))
+        self.shallow_code: list[compiler.classes.ShallowParsedLine] = base_output.shallow_code()
 
     def __repr__(self) -> str:
         return f"{self.all}"
+
+
+class Method:
+    """
+    a wrapper for the Method class
+    """
+    def __init__(self, method: compiler.classes.BaseMethod):
+        self.raw_method = method
+        self.name = method.name()
+        self.input = method.input()
+        self.output = method.output()
+        self.derivatives = method.derivatives()
+        self.lines = method.lines()
 
 
 def handle_output(rust_output) -> BaseOutput:
