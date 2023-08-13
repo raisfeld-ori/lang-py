@@ -10,7 +10,7 @@ use tokio::runtime::Builder;
 use std::thread;
 use crate::base_parser::*;
 use crate::outputs::*;
-use crate::base_types::{get_methods,BaseMethod};
+use crate::base_types::{get_base_methods, Method, Object, get_base_objects};
 
 // takes in raw python code, parses it into variables, statements, executables, and unknown.
 #[pyfunction]
@@ -25,28 +25,20 @@ fn initial_parse(text: String) -> PyResult<BaseOutput> {
     return output.join().unwrap();
 }
 
-
-// all classes python calls explicitly
-#[pymodule]
-fn classes(_py: Python, module: &PyModule) -> PyResult<()> {
-
-    module.add_class::<AllOutputs>()?;
-    module.add_class::<BaseOutput>()?;
-    module.add_class::<BaseMethod>()?;
-    module.add_class::<ShallowParsedLine>()?;
-    Ok(())
-}
-
 // the functions for parsing the python code
 #[pymodule]
 fn parse(_py: Python, module: &PyModule) -> PyResult<()> {
-    /*
-    the parse module does just what the name says,
-    it parses the python code given into different variables,
-    and returns a parsed code
-     */
     module.add_wrapped(wrap_pyfunction!(initial_parse))?;
-    module.add_wrapped(wrap_pyfunction!(get_methods))?;
+    module.add_wrapped(wrap_pyfunction!(get_base_methods))?;
+    module.add_wrapped(wrap_pyfunction!(get_base_objects))?;
+    module.add_class::<Method>()?;
+    module.add_class::<ShallowParsedLine>()?;
+    module.add_class::<Object>()?;
+    module.add_class::<BaseVar>()?;
+    module.add_class::<BaseStatement>()?;
+    module.add_class::<BaseExecutable>()?;
+    module.add_class::<AllOutputs>()?;
+    module.add_class::<BaseOutput>()?;
     Ok(())
 }
 
@@ -58,6 +50,5 @@ fn lang_py(_py: Python, module: &PyModule) -> PyResult<()> {
     that belong to this part
      */
     module.add_wrapped(wrap_pymodule!(parse))?;
-    module.add_wrapped(wrap_pymodule!(classes))?;
     Ok(())
 }

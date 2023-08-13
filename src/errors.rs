@@ -10,88 +10,50 @@ use pyo3::PyErr;
 
 
 pub trait HandledError {
-    fn mark(&mut self, line: String, pos: i32);
-    fn is_err() -> bool {true}
     fn to_pyerr(&self) -> PyErr;
 }
 
 // error in parsing BaseVar
-#[pyclass]#[derive(Debug, Clone)]pub struct NotVarError (pub String,pub Vec<(String, i32)>);
-impl From<&str> for NotVarError {
-    fn from(value: &str) -> Self {
-        return NotVarError(format!("NotVarError: {}", value),
-                           Vec::new()); } }
-impl From<String> for NotVarError {
-    fn from(value: String) -> Self {
-        return NotVarError(format!("NotVarError: {}", value),
-                           Vec::new()); } }
+#[pyclass]#[derive(Debug, Clone, PartialOrd, PartialEq)]
+pub struct NotVarError (pub String,pub Option<String>);
 impl HandledError for NotVarError{
-    fn mark(&mut self, line: String, pos: i32) { self.1.push((line, pos)) }
     fn to_pyerr(&self) -> PyErr  {
-        let mut traceback: String = String::new();
-        for (tr_line, tr_pos) in &self.1{
-            traceback.push_str(format!("at line {}: {}", tr_pos, tr_line).as_str())
-        }
-        traceback.push_str(self.0.to_string().as_str());
-
-        return PyErr::new::<PyBaseException, String>(traceback);
+        return PyErr::new::<PyBaseException, String>(
+            format!("NotVarError: {}\nsuggestion: {}", self.0, self.1.clone().unwrap_or("()".to_string()))
+        );
     }
 }
 
 // error in parsing BaseStatement
-#[pyclass]#[derive(Debug, Clone)] pub struct NotStatementError (pub String, pub Vec<(String, i32)>);
-impl From<&str> for NotStatementError {
-    fn from(value: &str) -> Self {
-        return NotStatementError
-            (format!("NotStatementError: {}", value),
-                Vec::new());
-            }
-}
-impl From<String> for NotStatementError {
-    fn from(value: String) -> Self {
-        return NotStatementError
-            (format!("NotStatementError: {}", value),
-                Vec::new());
-            }
-}
+#[pyclass]#[derive(Debug, Clone)] pub struct NotStatementError (pub String, pub Option<String>);
 
 impl HandledError for NotStatementError{
-    fn mark(&mut self, line: String, pos: i32) { self.1.push((line, pos)); }
     fn to_pyerr(&self) -> PyErr  {
-        let mut traceback: String = String::new();
-        for (tr_line, tr_pos) in &self.1{
-            traceback.push_str(format!("at line {}: {}", tr_pos, tr_line).as_str())
-        }
-        traceback.push_str(self.0.to_string().as_str());
-
-        return PyErr::new::<PyBaseException, String>(traceback);
+        return PyErr::new::<PyBaseException, String>(
+            format!("NotStatementError: {}\nsuggestion: {}", self.0, self.1.clone().unwrap_or("()".to_string()))
+        );
     }
 }
 
-#[pyclass]#[derive(Clone, Debug)]pub struct FailedOutputError(pub String, pub Vec<(String, i32)>);
-impl From<&str> for FailedOutputError {
-    fn from(value: &str) -> Self {
-        return FailedOutputError
-            (format!("FailedOutputError: {}", value),
-                Vec::new());
-            }
-}
-impl From<String> for FailedOutputError {
-    fn from(value: String) -> Self {
-        return FailedOutputError
-            (format!("FailedOutputError: {}", value),
-                Vec::new());
-            }
-}
+#[pyclass]#[derive(Clone, Debug, PartialOrd, PartialEq)]
+pub struct FailedOutputError(pub String, pub Option<String>);
+
 impl HandledError for FailedOutputError{
-    fn mark(&mut self, line: String, pos: i32) { self.1.push((line, pos)); }
     fn to_pyerr(&self) -> PyErr  {
-        let mut traceback: String = String::new();
-        for (tr_line, tr_pos) in &self.1{
-            traceback.push_str(format!("at line {}: {}", tr_pos, tr_line).as_str())
-        }
-        traceback.push_str(self.0.to_string().as_str());
-
-        return PyErr::new::<PyBaseException, String>(traceback);
+        return PyErr::new::<PyBaseException, String>(
+            format!("FailedOutputError: {}\nsuggestion: {}", self.0, self.1.clone().unwrap_or("none".to_string()))
+        );
     }
 }
+
+
+pub struct NotClassError(pub String, pub Option<String>);
+
+impl HandledError for NotClassError {
+    fn to_pyerr(&self) -> PyErr  {
+        return PyErr::new::<PyBaseException, String>(
+            format!("NotClassError: {}\nsuggestion: {}", self.0, self.1.clone().unwrap_or("()".to_string()))
+        );
+    }
+}
+

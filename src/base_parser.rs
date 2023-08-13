@@ -26,7 +26,7 @@ Executable - any line that ends by using a function.
 Statement - lines of code which store other lines of code.
 Unknown - any line of code that has no effect on the rest of the code, therefore doesn't matter.
  */
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 #[pyclass]
 pub enum CodeType{
     Variable,
@@ -37,13 +37,13 @@ pub enum CodeType{
 
 
 // the most basic parsing of the code
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 #[pyclass]
 pub struct ShallowParsedLine{
     pub line_code_type: CodeType,
     pub actual_line: String,
     pub all_spaces: i32,
-    pub placement: Option<i32>,
+    pub position: usize,
 }
 
 #[pymethods]
@@ -51,7 +51,7 @@ impl ShallowParsedLine {
     pub fn line_code_type(&self) -> CodeType {self.line_code_type.clone()}
     pub fn actual_line(&self) -> String {self.actual_line.clone()}
     pub fn all_spaces(&self) -> i32 {self.all_spaces.clone()}
-    pub fn placement(&self) -> Option<i32> {self.placement.clone()}
+    pub fn position(&self) -> usize {self.position.clone()}
 }
 
 // part of the from function, but it takes a lot of space, so i added it here
@@ -79,7 +79,7 @@ async fn from_parse(i: usize, line: String) -> ShallowParsedLine {
         line_code_type: line_type.clone(),
         actual_line: line.to_string(),
         all_spaces: spaces_found,
-        placement: Some(i as i32),
+        position: i,
     };
 }
 impl ShallowParsedLine {
@@ -102,15 +102,6 @@ impl ShallowParsedLine {
         let result = result.read().await;
         return result.clone();
     }
-
-    pub fn empty(code: Option<String>) -> ShallowParsedLine {
-        return ShallowParsedLine{
-            line_code_type: CodeType::Unknown,
-            actual_line: code.unwrap_or("".to_string()),
-            all_spaces: 0,
-            placement: None,
-        };
-    }
 }
 
 
@@ -121,7 +112,7 @@ pub struct BaseVar {
     pub name: String,
     pub value: String,
     pub annotation: Option<String>,
-    pub actual_line: String,
+    pub actual_line: ShallowParsedLine,
 }
 
 // rust only functions
@@ -129,13 +120,14 @@ pub struct BaseVar {
 impl BaseVar {
         pub fn from(shallow_var: ShallowParsedLine) -> PyResult<BaseVar> {
             if shallow_var.line_code_type.type_id() != CodeType::Variable.type_id() {
-                return Err(NotVarError::from(
-                    format!("expected a var, got {:?}", shallow_var.line_code_type)).to_pyerr()
+                return Err(NotVarError(
+                    format!("expected a var, got {:?}", shallow_var.line_code_type),
+                    None).to_pyerr()
                 )
             }
             else if !shallow_var.actual_line.contains('=') {
                 return Err(
-                    NotVarError::from("the variable given does not have a '='").to_pyerr()
+                    NotVarError ("the variable given does not have a '='".to_string(), None).to_pyerr()
                 )
             }
 
@@ -152,25 +144,23 @@ impl BaseVar {
                 name: name,
                 value: value,
                 annotation: annotation,
-                actual_line: shallow_var.actual_line,
+                actual_line: shallow_var,
             })
     }
 }
-// python and rust functions
+
 #[pymethods]
 impl BaseVar {
     pub fn name(&self) -> String {return self.name.clone();}
     pub fn value(&self) -> String {return self.value.clone();}
     pub fn annotation(&self) -> Option<String> {return self.annotation.clone();}
-    pub fn actual_line(&self) -> String {return self.actual_line.clone()}
+    pub fn actual_line(&self) -> ShallowParsedLine {return self.actual_line.clone()}
 }
 
-// the basic statement structure
 #[derive(Debug, Clone)]
 #[pyclass]
 pub struct BaseStatement {
     pub statement_type: StatementType,
-    pub statement_variables: Vec<String>,
     pub actual_line: ShallowParsedLine,
     pub is_async: bool,
 }
@@ -178,12 +168,11 @@ pub struct BaseStatement {
 #[pymethods]
 impl BaseStatement {
     pub fn statement_type(&self) -> StatementType {self.statement_type.clone()}
-    pub fn statement_variables(&self) -> Vec<String> {self.statement_variables.clone()}
     pub fn actual_line(&self) -> ShallowParsedLine {self.actual_line.clone()}
-    pub fn is_async(&self) -> bool {self.is_async}
+    pub fn is_async(&self) -> bool {self.is_async.clone()}
 }
 
-// rust only functions
+
 impl BaseStatement {
     pub fn from(line: ShallowParsedLine) -> Result<BaseStatement, PyErr> {
         let line_words = line.actual_line.split_whitespace();
@@ -203,15 +192,9 @@ impl BaseStatement {
         };
         if statement_type.is_err() {return Err(statement_type.unwrap_err())}
         let statement_type = statement_type.unwrap();
-        let mut statement_variables: Vec<String> = Vec::new();
-        for (i, word) in line_words.enumerate() {
-            if i == 0 {continue}
-            if is_async && (i as i32) == 1 {continue}
-            statement_variables.push(word.to_string());
-        }
+
         return Ok(BaseStatement {
             statement_type: statement_type,
-            statement_variables:  statement_variables,
             actual_line: line,
             is_async: is_async,
         })
@@ -236,7 +219,6 @@ impl BaseExecutable {
     pub fn components(&self) -> Vec<String> {self.components.clone()}
 }
 
-#[allow(unused_variables)]
 impl BaseExecutable {
     pub fn from(line: ShallowParsedLine) -> PyResult<BaseExecutable> {
         let components = line.actual_line
@@ -247,5 +229,22 @@ impl BaseExecutable {
             actual_line: line,
             components: components,
         });
+    }
+}
+
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
+#[pyclass]
+pub struct Unknown {
+    actual_line: ShallowParsedLine,
+}
+
+#[pymethods]
+impl Unknown {
+    pub fn actual_line(&self) -> ShallowParsedLine {self.actual_line.clone()}
+}
+
+impl Unknown {
+    pub fn from(line: ShallowParsedLine) -> PyResult<Unknown> {
+        return Ok(Unknown {actual_line: line})
     }
 }

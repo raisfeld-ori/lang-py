@@ -17,10 +17,10 @@ pub enum AllOutputs{
 #[derive(Clone, Debug)]
 #[pyclass]
 pub struct BaseOutput {
-    pub statements: Vec<(BaseStatement, i32)>,
-    pub variables: Vec<(BaseVar, i32)>,
-    pub executables: Vec<(BaseExecutable, i32)>,
-    pub unknown: Vec<(ShallowParsedLine, i32)>,
+    pub statements: Vec<BaseStatement>,
+    pub variables: Vec<BaseVar>,
+    pub executables: Vec<BaseExecutable>,
+    pub unknown: Vec<Unknown>,
     pub shallow_code: Vec<ShallowParsedLine>,
 }
 
@@ -28,45 +28,48 @@ pub struct BaseOutput {
 impl BaseOutput{
     #[staticmethod]
     pub fn output_type() ->  AllOutputs {AllOutputs::BaseOutput}
-    pub fn statements(&self) -> Vec<(BaseStatement, i32)> {self.statements.clone()}
-    pub fn variables(&self) -> Vec<(BaseVar, i32)> {self.variables.clone()}
-    pub fn executables(&self) -> Vec<(BaseExecutable, i32)> {self.executables.clone()}
-    pub fn unknown(&self) -> Vec<(ShallowParsedLine, i32)> {self.unknown.clone()}
+    pub fn statements(&self) -> Vec<BaseStatement> {self.statements.clone()}
+    pub fn variables(&self) -> Vec<BaseVar> {self.variables.clone()}
+    pub fn executables(&self) -> Vec<BaseExecutable> {self.executables.clone()}
+    pub fn unknown(&self) -> Vec<Unknown> {self.unknown.clone()}
     pub fn shallow_code(&self) -> Vec<ShallowParsedLine> { self.shallow_code.clone() }
 }
 
 pub async fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<BaseOutput>{
     let mut threads: Vec<JoinHandle<Option<PyErr>>> = Vec::new();
-    let variables: Arc<RwLock<Vec<(BaseVar, i32)>>> = Arc::new(RwLock::new(Vec::new()));
-    let statements: Arc<RwLock<Vec<(BaseStatement, i32)>>> = Arc::new(RwLock::new(Vec::new()));
-    let executables: Arc<RwLock<Vec<(BaseExecutable, i32)>>> = Arc::new(RwLock::new(Vec::new()));
-    let unknown: Arc<RwLock<Vec<(ShallowParsedLine, i32)>>> = Arc::new(RwLock::new(Vec::new()));
+    let variables: Arc<RwLock<Vec<BaseVar>>> = Arc::new(RwLock::new(Vec::new()));
+    let statements: Arc<RwLock<Vec<BaseStatement>>> = Arc::new(RwLock::new(Vec::new()));
+    let executables: Arc<RwLock<Vec<BaseExecutable>>> = Arc::new(RwLock::new(Vec::new()));
+    let unknowns: Arc<RwLock<Vec<Unknown>>> = Arc::new(RwLock::new(Vec::new()));
 
-    for (i, shallow_line) in shallow_code.iter().enumerate() {
+    for shallow_line in shallow_code.iter() {
         let variables = variables.clone();
         let statements = statements.clone();
         let executables = executables.clone();
-        let unknown = unknown.clone();
-        let i_owned = i.clone() as i32;
+        let unknowns = unknowns.clone();
         let shallow_line = shallow_line.clone();
         threads.push(spawn(async move{
             match shallow_line.line_code_type {
                 CodeType::Variable => {
                     let variable = BaseVar::from(shallow_line.to_owned());
                     if variable.is_err() {return Some(variable.unwrap_err())}
-                    variables.write().unwrap().push((variable.unwrap(), i_owned));
+                    variables.write().unwrap().push(variable.unwrap());
                 }
                 CodeType::Statement => {
                     let statement = BaseStatement::from(shallow_line.to_owned());
                     if statement.is_err() {return Some(statement.unwrap_err())}
-                    statements.write().unwrap().push((statement.unwrap(), i_owned));
+                    statements.write().unwrap().push(statement.unwrap());
                 }
                 CodeType::Executable => {
                     let executable = BaseExecutable::from(shallow_line.to_owned());
                     if executable.is_err() {return Some(executable.unwrap_err())}
-                    executables.write().unwrap().push((executable.unwrap(), i_owned));
+                    executables.write().unwrap().push(executable.unwrap());
                 }
-                CodeType::Unknown => {unknown.write().unwrap().push((shallow_line.to_owned(), i_owned));}
+                CodeType::Unknown => {
+                    let unknown = Unknown::from(shallow_line.to_owned());
+                    if unknown.is_err() {return Some(unknown.unwrap_err())}
+                    unknowns.write().unwrap().push(unknown.unwrap());
+                }
             };
             return None;
         }));
@@ -81,13 +84,13 @@ pub async fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResul
     let variables = variables.read().unwrap();
     let statements = statements.read().unwrap();
     let executables = executables.read().unwrap();
-    let unknown = unknown.read().unwrap();
+    let unknowns = unknowns.read().unwrap();
 
     return Ok(BaseOutput {
         variables: variables.clone(),
         statements: statements.clone(),
         executables: executables.clone(),
-        unknown: unknown.clone(),
+        unknown: unknowns.clone(),
         shallow_code: shallow_code.clone(),
         }
     )
