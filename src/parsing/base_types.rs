@@ -170,10 +170,11 @@ impl Object {
     pub fn name(&self) ->  String {self.name.clone()}
     pub fn inheritance(&self) -> Vec<String> {self.inheritance.clone()}
     pub fn lines(&self) -> Vec<String> {self.lines.clone()}
+    pub fn methods(&self) -> Vec<Method> {self.methods.clone()}
 }
 
 impl Object{
-    pub fn from(statement: BaseStatement) -> PyResult<Object> {
+    pub fn from(statement: BaseStatement, all_lines: Vec<ShallowParsedLine>, methods: Vec<Method>) -> PyResult<Object> {
         if statement.statement_type != StatementType::Class {
             return Err(NotClassError (
                 format!("expected a class, found {:?}", statement.statement_type), None)
@@ -203,6 +204,12 @@ impl Object{
                 }
             }
         }
+        let mut iter_methods = methods.into_iter();
+        println!("{:?}", iter_methods.next());
+        println!("{:?}", iter_methods.next());
+        for (i, line) in all_lines.iter().enumerate() {
+
+        }
 
 
         return Ok(Object {
@@ -215,11 +222,11 @@ impl Object{
 }
 
 #[pyfunction]
-pub fn get_base_objects(statements: Vec<BaseStatement>) -> PyResult<Vec<Object>>{
+pub fn get_base_objects(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>, methods: Vec<Method>) -> PyResult<Vec<Object>>{
     let mut objects: Vec<Object> = Vec::new();
     for statement in statements {
         if statement.statement_type == StatementType::Class {
-            let _ = objects.push(Object::from(statement).unwrap());
+            objects.push(Object::from(statement, all_lines.clone(), methods.clone()).unwrap());
         }
     }
     return Ok(objects);

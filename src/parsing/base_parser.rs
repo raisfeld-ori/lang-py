@@ -10,7 +10,6 @@ use tokio::task::{JoinHandle, spawn};
 use tokio::sync::RwLock;
 use std::sync::Arc;
 use crate::base_types::StatementType;
-use PyErr;
 
 
 static OPERATORS: [char; 3] = ['>', '<', '!'];
@@ -174,7 +173,7 @@ impl BaseStatement {
 
 
 impl BaseStatement {
-    pub fn from(line: ShallowParsedLine) -> Result<BaseStatement, PyErr> {
+    pub fn from(line: ShallowParsedLine) -> PyResult<BaseStatement> {
         let line_words = line.actual_line.split_whitespace();
 
         let mut is_async: bool = false;
