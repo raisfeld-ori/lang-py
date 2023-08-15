@@ -6,7 +6,7 @@ use pyo3::prelude::*;
 use pyo3::wrap_pymodule;
 use pyo3::wrap_pyfunction;
 use parsing::base_parser::*;
-use parsing::outputs::*;
+use extras::outputs::*;
 use parsing::base_types::*;
 use extras::actions::*;
 
@@ -32,7 +32,7 @@ fn actions(_py: Python, module: &PyModule) -> PyResult<()>{
     module.add_wrapped(wrap_pyfunction!(async_parse_methods))?;
     module.add_wrapped(wrap_pyfunction!(async_parse_objects))?;
     module.add_class::<AllOutputs>()?;
-    module.add_class::<BaseOutput>()?;
+    module.add_class::<BaseCode>()?;
     Ok(())
 }
 

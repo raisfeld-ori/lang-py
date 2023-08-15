@@ -1,8 +1,7 @@
 use std::sync::Arc;
 use pyo3::prelude::*;
 use crate::parsing::base_parser::*;
-use crate::parsing::outputs::*;
-use crate::parsing::base_parser::*;
+use crate::extras::outputs::*;
 use tokio::runtime::Builder;
 use tokio::spawn;
 use std::thread;
@@ -11,12 +10,9 @@ use tokio::task::JoinHandle;
 
 use crate::parsing::base_types::*;
 
-/* scans the basic code structure asynchronously without python's GIL
-:param text - the raw python code
-:return - returns PyResult<BaseOutput>, which is Result<crate::parsing::outputs::BaseOutput, PyErr>
- */
+// scans the raw python code and turns it into variables, statements, executables and unknown
 #[pyfunction]
-pub fn async_scan(text: String) -> PyResult<BaseOutput> {
+pub fn async_scan(text: String) -> PyResult<BaseCode> {
     let runner = Builder::new_multi_thread().build().unwrap();
     let output = thread::spawn(move ||{
         runner.block_on(async move {
@@ -60,8 +56,9 @@ pub fn async_parse_methods(statements: Vec<BaseStatement>, all_lines: Vec<Shallo
         });
     return thread.join().unwrap();
 }
-
-pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<BaseOutput>{
+// takes in ShallowParsedLine, which is a wrapper for the raw python code,
+// and for every line it parses them further and sorts them as vars, statements, exes and others
+pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<BaseCode>{
     let mut threads: Vec<JoinHandle<Option<PyErr>>> = Vec::new();
     let variables: Arc<RwLock<Vec<BaseVar>>> = Arc::new(RwLock::new(Vec::new()));
     let statements: Arc<RwLock<Vec<BaseStatement>>> = Arc::new(RwLock::new(Vec::new()));
@@ -112,7 +109,7 @@ pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> P
     let executables = executables.read().await;
     let unknowns = unknowns.read().await;
 
-    return Ok(BaseOutput {
+    return Ok(BaseCode {
         variables: variables.clone(),
         statements: statements.clone(),
         executables: executables.clone(),
@@ -121,6 +118,7 @@ pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> P
         })
 }
 
+// an async function that parses all statements and parses the objects
 #[pyfunction]
 pub fn async_parse_objects(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>, methods: Vec<Method>) -> PyResult<Vec<Object>> {
     let runner = Builder::new_multi_thread().build().unwrap();
@@ -153,4 +151,19 @@ pub fn async_parse_objects(statements: Vec<BaseStatement>, all_lines: Vec<Shallo
             })
         });
     return thread.join().unwrap();
+}
+
+// a combination of other async functions, in order to parse the code as fast as possible.
+pub fn async_parse_code(text: String) -> PyResult<()> {
+    let base_code = async_scan(text).unwrap();
+    let methods = async_parse_methods(base_code.statements.clone(), base_code.shallow_code.clone());
+    if methods.is_err() {return Err(methods.unwrap_err())}
+    let methods: Vec<Method> = methods.unwrap();
+    let objects = async_parse_objects(base_code.statements.clone(), base_code.shallow_code.clone(), methods);
+    if objects.is_err() {return Err(objects.unwrap_err())}
+    let objects = objects.unwrap();
+
+
+
+    return Ok(());
 }

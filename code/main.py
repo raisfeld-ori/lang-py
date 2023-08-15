@@ -12,11 +12,7 @@ if __name__ == '__main__':
     try:
         data = console.open_file()
         result = handle_output(lang_py.actions.async_scan(data))
-        methods = lang_py.actions.async_parse_methods(result.statements, result.shallow_code)
-        objects = lang_py.actions.async_parse_objects(result.statements, result.shallow_code, methods)
-        for obj in objects:
-            for method in obj.methods():
-                console.log(method.name())
+        console.log(result.executables)
         console.graceful_exit()
     except Exception as error:
         console.panic(error, with_traceback=True)

@@ -5,16 +5,17 @@ full of classes that compile information
 
 use pyo3::prelude::*;
 use crate::parsing::base_parser::*;
+use crate::parsing::base_types::{Method, Object};
 
 
 #[pyclass]
 pub enum AllOutputs{
-    BaseOutput,
+    BaseCode, BaseGlobals
 }
 
 #[derive(Clone, Debug)]
 #[pyclass]
-pub struct BaseOutput {
+pub struct BaseCode {
     pub statements: Vec<BaseStatement>,
     pub variables: Vec<BaseVar>,
     pub executables: Vec<BaseExecutable>,
@@ -23,9 +24,9 @@ pub struct BaseOutput {
 }
 
 #[pymethods]
-impl BaseOutput{
+impl BaseCode{
     #[staticmethod]
-    pub fn output_type() ->  AllOutputs {AllOutputs::BaseOutput}
+    pub fn output_type() ->  AllOutputs {AllOutputs::BaseCode}
     pub fn statements(&self) -> Vec<BaseStatement> {self.statements.clone()}
     pub fn variables(&self) -> Vec<BaseVar> {self.variables.clone()}
     pub fn executables(&self) -> Vec<BaseExecutable> {self.executables.clone()}
@@ -34,7 +35,7 @@ impl BaseOutput{
 }
 
 #[pyfunction]
-pub fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<BaseOutput> {
+pub fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<BaseCode> {
     let mut variables: Vec<BaseVar> = Vec::new();
     let mut statements: Vec<BaseStatement> = Vec::new();
     let mut executables: Vec<BaseExecutable> = Vec::new();
@@ -63,11 +64,26 @@ pub fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<Base
                 }
             };
     }
-    return Ok(BaseOutput {
+    return Ok(BaseCode {
         variables: variables,
         statements: statements,
         executables: executables,
         unknown: unknowns,
         shallow_code: shallow_code,
     })
+}
+
+#[derive(Debug, Clone)]
+#[pyclass]
+pub struct BaseGlobals {
+    pub global_code: BaseCode,
+    pub global_objects: Vec<Object>,
+    pub global_methods: Vec<Method>,
+}
+
+#[pymethods]
+impl BaseGlobals {
+    pub fn global_code(&self) -> BaseCode {self.global_code.clone()}
+    pub fn global_objects(&self) -> Vec<Object> {self.global_objects.clone()}
+    pub fn global_methods(&self) -> Vec<Method> {self.global_methods.clone()}
 }

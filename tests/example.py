@@ -7,8 +7,9 @@ var: str = "test"
 class example(object):
     def __abs__(self):
         return
-    def print(self) -> object:
-        return "woman"
+    @staticmethod
+    def print() -> object:
+        return "test"
 
 def main(self) -> None:
     print(var)

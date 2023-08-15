@@ -57,7 +57,7 @@ impl Method{
 }
 
 impl Method{
-    pub fn from(line: BaseStatement, all_lines: Vec<ShallowParsedLine>) -> PyResult<Self> {
+    pub fn from(line: BaseStatement, mut all_lines: Vec<ShallowParsedLine>) -> PyResult<Self> {
         if line.statement_type != StatementType::Def {
                         return Err(
 NotStatementError(
@@ -73,7 +73,6 @@ NotStatementError(
         let mut name: String = String::new();
         let mut input: Vec<String> = Vec::new();
         let mut output: Vec<String>  = Vec::new();
-        let derivatives: Vec<String> = Vec::new();
 
         let mut current: String = String::new();
         for (i, char) in line.actual_line.actual_line.chars().enumerate(){
@@ -99,13 +98,17 @@ NotStatementError(
             }
         }
         if current != String::new() {output.push(current)}
-
+        let mut derivatives: Vec<String> = Vec::new();
         let mut lines: Vec<ShallowParsedLine> = Vec::new();
+        all_lines.sort_by_key(|line| line.position);
         for other_line in all_lines.iter() {
             if other_line.position > line.actual_line.position {
                 if other_line.all_spaces <= line.actual_line.all_spaces
                     && other_line.actual_line.replace(" ", "") != ""{break;}
                 lines.push(other_line.clone());
+            }
+            else if other_line.actual_line.replace(" ", "").starts_with("@") {
+                derivatives.push(other_line.actual_line.clone());
             }
         }
 
@@ -174,7 +177,7 @@ impl Object{
         let mut methods: Vec<Method> = Vec::new();
         let mut iter_methods = parsed_methods.iter();
         let mut current_method = iter_methods.next().unwrap();
-        for (i, other_line) in all_lines.iter().enumerate() {
+        for other_line in all_lines.iter() {
             if other_line.position > statement.actual_line.position {
 
                 if other_line.all_spaces <= statement.actual_line.all_spaces
