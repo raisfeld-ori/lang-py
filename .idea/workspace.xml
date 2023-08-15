@@ -8,16 +8,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ce942fcf-f242-4970-b8fe-f665bdb272a9" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/python_src/rust_wrapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/python_src/rust_wrapper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/base_parser.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/base_parser.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/base_types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/base_types.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/errors.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/errors.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/extras.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/extras.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/extras/additional_structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/extras/actions.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/extras/outputs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing/outputs.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/outputs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/outputs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/parsing.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/parsing/base_parser.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing/base_parser.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/parsing/base_types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing/base_types.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/example.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,8 +29,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Python Script" />
         <option value="Rust File" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -54,7 +56,7 @@
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/oriri/Desktop/projects/lang-py-compiler/tests/example.py",
     "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "settings.editor.selected.configurable": "language.rust.cargo.check"
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -63,6 +65,9 @@
       <recent name="C:\Users\oriri\Desktop\projects\lang-py-compiler\code" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\oriri\Desktop\projects\lang-py-compiler\src\parsing" />
+      <recent name="C:\Users\oriri\Desktop\projects\lang-py-compiler\src\extras" />
+      <recent name="C:\Users\oriri\Desktop\projects\lang-py-compiler\src" />
       <recent name="C:\Users\oriri\Desktop\projects\lang-py-compiler\code" />
     </key>
   </component>
@@ -82,7 +87,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/code/main.py" />
-      <option name="PARAMETERS" value="C:\Users\oriri\Desktop\projects\lang-py-compiler\tests\example2.py -py" />
+      <option name="PARAMETERS" value="C:\Users\oriri\Desktop\projects\lang-py-compiler\tests\example.py -py" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="true" />
       <option name="MODULE_MODE" value="false" />
@@ -130,5 +135,16 @@
       <updated>1690322132615</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

@@ -1,42 +1,6 @@
 use pyo3::prelude::*;
-use tokio::task;
-use tokio::runtime::Builder;
-use std::thread;
-use crate::base_parser::*;
-use crate::errors::{HandledError, NotClassError, NotStatementError};
-
-#[pyfunction]
-pub fn get_base_methods(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>) -> PyResult<Vec<Method>> {
-    let runner = Builder::new_multi_thread().build().unwrap();
-    let thread: thread::JoinHandle<PyResult<Vec<Method>>>= thread::spawn(move ||{
-            runner.block_on(async move {
-                let mut threads: Vec<task::JoinHandle<Option<PyResult<Method>>>> = Vec::new();
-                for statement in statements{
-                    let statement_owned = statement.to_owned();
-                    let all_lines_owned = all_lines.to_owned();
-                    threads.push(task::spawn(async move {
-                        if statement_owned.statement_type == StatementType::Def{
-                            Some(Method::from(statement_owned, all_lines_owned))
-                        }
-                        else {
-                            None
-                        }
-                    }));
-                }
-                let mut base_methods: Vec<Method> = Vec::new();
-                for thread in threads{
-                    let output = thread.await.unwrap();
-                    if output.is_none() {continue;}
-                    let output = output.unwrap();
-                    if output.is_err() {return Err(output.unwrap_err());}
-                    else {base_methods.push(output.unwrap());}
-                }
-                return Ok(base_methods);
-
-            })
-        });
-    return thread.join().unwrap();
-}
+use crate::parsing::base_parser::*;
+use crate::extras::errors::{HandledError, NotClassError, NotStatementError};
 
 
 // every type of statement
@@ -162,19 +126,19 @@ pub struct Object{
     name: String,
     inheritance: Vec<String>,
     methods: Vec<Method>,
-    lines: Vec<String>,
+    lines: Vec<ShallowParsedLine>,
 }
 
 #[pymethods]
 impl Object {
     pub fn name(&self) ->  String {self.name.clone()}
     pub fn inheritance(&self) -> Vec<String> {self.inheritance.clone()}
-    pub fn lines(&self) -> Vec<String> {self.lines.clone()}
+    pub fn lines(&self) -> Vec<ShallowParsedLine> {self.lines.clone()}
     pub fn methods(&self) -> Vec<Method> {self.methods.clone()}
 }
 
 impl Object{
-    pub fn from(statement: BaseStatement, all_lines: Vec<ShallowParsedLine>, methods: Vec<Method>) -> PyResult<Object> {
+    pub fn from(statement: BaseStatement,mut all_lines: Vec<ShallowParsedLine>,mut parsed_methods: Vec<Method>) -> PyResult<Object> {
         if statement.statement_type != StatementType::Class {
             return Err(NotClassError (
                 format!("expected a class, found {:?}", statement.statement_type), None)
@@ -204,29 +168,53 @@ impl Object{
                 }
             }
         }
-        let mut iter_methods = methods.into_iter();
-        println!("{:?}", iter_methods.next());
-        println!("{:?}", iter_methods.next());
-        for (i, line) in all_lines.iter().enumerate() {
+        all_lines.sort_by_key(|line| line.position);
+        parsed_methods.sort_by_key(|method| method.actual_line.actual_line.position);
+        let mut lines: Vec<ShallowParsedLine> = Vec::new();
+        let mut methods: Vec<Method> = Vec::new();
+        let mut iter_methods = parsed_methods.iter();
+        let mut current_method = iter_methods.next().unwrap();
+        for (i, other_line) in all_lines.iter().enumerate() {
+            if other_line.position > statement.actual_line.position {
 
+                if other_line.all_spaces <= statement.actual_line.all_spaces
+                    && other_line.actual_line.replace(" ", "") != ""{ break }
+
+                if other_line.line_code_type == CodeType::Statement
+                    && other_line.position == current_method.actual_line.actual_line.position {
+                         methods.push(current_method.clone());
+                        current_method = iter_methods.next().unwrap();
+                }
+                lines.push(other_line.clone());
+            }
         }
-
 
         return Ok(Object {
             name: name,
             inheritance: inheritance,
-            lines: Vec::new(),
-            methods: Vec::new(),
+            lines: lines,
+            methods: methods,
         })
     }
 }
 
 #[pyfunction]
-pub fn get_base_objects(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>, methods: Vec<Method>) -> PyResult<Vec<Object>>{
+pub fn parse_objects(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>, methods: Vec<Method>) -> PyResult<Vec<Object>>{
     let mut objects: Vec<Object> = Vec::new();
     for statement in statements {
         if statement.statement_type == StatementType::Class {
             objects.push(Object::from(statement, all_lines.clone(), methods.clone()).unwrap());
+        }
+    }
+    return Ok(objects);
+}
+
+#[pyfunction]
+pub fn parse_methods(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>) -> PyResult<Vec<Method>>{
+    let mut objects: Vec<Method> = Vec::new();
+    for statement in statements {
+        if statement.statement_type == StatementType::Class {
+            objects.push(Method::from(statement, all_lines.clone()).unwrap());
         }
     }
     return Ok(objects);

@@ -5,11 +5,11 @@ the name and value of a variable etc.
  */
 use std::any::Any;
 use pyo3::prelude::*;
-use crate::errors::*;
+use crate::extras::errors::*;
 use tokio::task::{JoinHandle, spawn};
 use tokio::sync::RwLock;
 use std::sync::Arc;
-use crate::base_types::StatementType;
+use crate::parsing::base_types::StatementType;
 
 
 static OPERATORS: [char; 3] = ['>', '<', '!'];
@@ -82,7 +82,7 @@ async fn from_parse(i: usize, line: String) -> ShallowParsedLine {
     };
 }
 impl ShallowParsedLine {
-    pub async fn from(python_code: String) -> Vec<ShallowParsedLine> {
+    pub async fn async_from(python_code: String) -> Vec<ShallowParsedLine> {
         let mut threads:  Vec<JoinHandle<()>> = Vec::new();
         let result: Arc<RwLock<Vec<ShallowParsedLine>>> = Arc::new(RwLock::new(Vec::new()));
 
@@ -156,7 +156,7 @@ impl BaseVar {
     pub fn actual_line(&self) -> ShallowParsedLine {return self.actual_line.clone()}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 #[pyclass]
 pub struct BaseStatement {
     pub statement_type: StatementType,
