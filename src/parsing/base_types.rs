@@ -38,12 +38,12 @@ impl StatementType{
 #[derive(Debug, Clone)]
 #[pyclass]
 pub struct Method{
-    name: String,
-    input: Vec<String>,
-    outputs: Vec<String>,
-    derivatives: Vec<String>,
-    lines: Vec<ShallowParsedLine>,
-    actual_line: BaseStatement,
+    pub name: String,
+    pub input: Vec<String>,
+    pub outputs: Vec<String>,
+    pub derivatives: Vec<String>,
+    pub lines: Vec<ShallowParsedLine>,
+    pub actual_line: BaseStatement,
 }
 
 #[pymethods]
@@ -126,10 +126,11 @@ NotStatementError(
 #[derive(Debug, Clone)]
 #[pyclass]
 pub struct Object{
-    name: String,
-    inheritance: Vec<String>,
-    methods: Vec<Method>,
-    lines: Vec<ShallowParsedLine>,
+    pub name: String,
+    pub inheritance: Vec<String>,
+    pub methods: Vec<Method>,
+    pub lines: Vec<ShallowParsedLine>,
+    pub actual_line: BaseStatement,
 }
 
 #[pymethods]
@@ -138,6 +139,7 @@ impl Object {
     pub fn inheritance(&self) -> Vec<String> {self.inheritance.clone()}
     pub fn lines(&self) -> Vec<ShallowParsedLine> {self.lines.clone()}
     pub fn methods(&self) -> Vec<Method> {self.methods.clone()}
+    pub fn actual_line(&self) -> BaseStatement {self.actual_line.clone()}
 }
 
 impl Object{
@@ -197,6 +199,7 @@ impl Object{
             inheritance: inheritance,
             lines: lines,
             methods: methods,
+            actual_line: statement,
         })
     }
 }

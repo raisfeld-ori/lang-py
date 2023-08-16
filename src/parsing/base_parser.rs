@@ -87,6 +87,7 @@ impl ShallowParsedLine {
         let result: Arc<RwLock<Vec<ShallowParsedLine>>> = Arc::new(RwLock::new(Vec::new()));
 
         for (i, line) in python_code.lines().enumerate().clone() {
+
             let i_owned = i.to_owned();
             let line_owned = line.to_owned();
             let result = result.clone();
@@ -199,17 +200,12 @@ impl BaseStatement {
         })
     }
 }
-#[allow(dead_code)]
-pub enum ExecutableType {
-    Variable (String),
-    Function (String),
-}
 
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct BaseExecutable {
-    actual_line: ShallowParsedLine,
-    components: Vec<String>,
+    pub actual_line: ShallowParsedLine,
+    pub components: Vec<String>,
 }
 
 #[pymethods]
@@ -234,7 +230,7 @@ impl BaseExecutable {
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 #[pyclass]
 pub struct Unknown {
-    actual_line: ShallowParsedLine,
+    pub actual_line: ShallowParsedLine,
 }
 
 #[pymethods]

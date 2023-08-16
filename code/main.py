@@ -11,8 +11,9 @@ if __name__ == '__main__':
     )
     try:
         data = console.open_file()
-        result = handle_output(lang_py.actions.async_scan(data))
-        console.log(result.executables)
-        console.graceful_exit()
+
+        result = lang_py.actions.async_parse_code(data)
+
+        #console.graceful_exit()
     except Exception as error:
         console.panic(error, with_traceback=True)

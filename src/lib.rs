@@ -31,6 +31,7 @@ fn actions(_py: Python, module: &PyModule) -> PyResult<()>{
     module.add_wrapped(wrap_pyfunction!(async_scan))?;
     module.add_wrapped(wrap_pyfunction!(async_parse_methods))?;
     module.add_wrapped(wrap_pyfunction!(async_parse_objects))?;
+    module.add_wrapped(wrap_pyfunction!(async_parse_code))?;
     module.add_class::<AllOutputs>()?;
     module.add_class::<BaseCode>()?;
     Ok(())

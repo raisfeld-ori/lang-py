@@ -154,16 +154,70 @@ pub fn async_parse_objects(statements: Vec<BaseStatement>, all_lines: Vec<Shallo
 }
 
 // a combination of other async functions, in order to parse the code as fast as possible.
-pub fn async_parse_code(text: String) -> PyResult<()> {
+#[pyfunction]
+pub fn async_parse_code(text: String) -> PyResult<BaseGlobals> {
     let base_code = async_scan(text).unwrap();
     let methods = async_parse_methods(base_code.statements.clone(), base_code.shallow_code.clone());
     if methods.is_err() {return Err(methods.unwrap_err())}
     let methods: Vec<Method> = methods.unwrap();
-    let objects = async_parse_objects(base_code.statements.clone(), base_code.shallow_code.clone(), methods);
+    let objects = async_parse_objects(base_code.statements.clone(), base_code.shallow_code.clone(), methods.clone());
     if objects.is_err() {return Err(objects.unwrap_err())}
     let objects = objects.unwrap();
+    let mut positions: Vec<usize> = Vec::new();
+    let mut global_objects: Vec<Object> = Vec::new();
+    let mut global_methods: Vec<Method> = Vec::new();
+    for object in objects {
+        if object.actual_line.actual_line.all_spaces == 0 {
+            positions.push(object.actual_line.actual_line.position);
+            global_objects.push(object.clone())
+        }
+    }
+    for method in methods {
+        if method.actual_line.actual_line.all_spaces == 0 {
+            positions.push(method.actual_line.actual_line.position);
+            global_methods.push(method.clone());
+        }
+    }
+    let variables: Vec<BaseVar> = base_code.variables
+        .into_iter()
+        .filter(|var|
+            !positions.contains(&var.actual_line.position)
+        && var.actual_line.all_spaces == 0)
+        .collect();
+    let statements: Vec<BaseStatement> = base_code.statements
+        .into_iter()
+        .filter(|statement|
+            !positions.contains(&statement.actual_line.position)
+        && statement.actual_line.all_spaces == 0)
+        .collect();
+    let executables: Vec<BaseExecutable> = base_code.executables
+        .into_iter()
+        .filter(|exe|
+            !positions.contains(&exe.actual_line.position)
+        && exe.actual_line.all_spaces == 0)
+        .collect();
+    let unknown: Vec<Unknown> = base_code.unknown
+        .into_iter()
+        .filter(|unknown|
+            !positions.contains(&unknown.actual_line.position)
+        && unknown.actual_line.all_spaces == 0)
+        .collect();
+    let shallow_code: Vec<ShallowParsedLine> = base_code.shallow_code
+        .into_iter()
+        .filter(|line|
+            !positions.contains(&line.position)
+        && line.all_spaces == 0
+        )
+        .collect();
+    let global_code = BaseCode {
+        statements: statements,
+        variables: variables,
+        executables: executables,
+        unknown: unknown,
+        shallow_code: shallow_code,
+    };
 
+    return BaseGlobals {
 
-
-    return Ok(());
+    }
 }

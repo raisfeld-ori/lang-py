@@ -9,9 +9,9 @@ class example(object):
         return
     @staticmethod
     def print() -> object:
-        return "test"
-
-def main(self) -> None:
-    print(var)
-    if main == self:
-        print("test")
+        return """test
+        test2
+        """
+def foo(bar: str) -> None:
+    if "foo" == bar:
+        print("test","test2")
