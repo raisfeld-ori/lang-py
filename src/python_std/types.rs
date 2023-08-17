@@ -24,9 +24,14 @@ impl StdTypes {
                 else {saved_letter = letter;}
             }
             else if NUMBERS.contains(&letter) { current_type = Some(StdTypes::Int); }
-            else if letter == '[' {saved_letter = '[';}
-            else if letter == ']' && saved_letter == '[' {current_type = Some(StdTypes::List);break}
+            else if letter == '.' && NUMBERS.contains(&saved_letter) {
+                current_type = Some(StdTypes::Float);
+                break
+            }
         }
+
+        if val.replace(" ", "").starts_with('[')
+        && val.replace(" ", "").ends_with(']') {current_type = Some(StdTypes::List);}
 
         return current_type;
     }
