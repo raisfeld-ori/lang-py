@@ -1,5 +1,4 @@
 from python_src import cli
-from python_src.rust_wrapper import *
 from lang_py import lang_py
 import sys
 
@@ -11,9 +10,9 @@ if __name__ == '__main__':
     )
     try:
         data = console.open_file()
+        result = lang_py.actions.async_parse_file(data, "example")
 
-        result = lang_py.actions.async_parse_code(data)
 
-        #console.graceful_exit()
+        console.graceful_exit()
     except Exception as error:
         console.panic(error, with_traceback=True)

@@ -5,7 +5,7 @@ full of classes that compile information
 
 use pyo3::prelude::*;
 use crate::parsing::base_parser::*;
-use crate::parsing::base_types::{Method, Object};
+use crate::parsing::base_types::{Method, Object, StatementType};
 
 
 #[pyclass]
@@ -21,6 +21,7 @@ pub struct BaseCode {
     pub executables: Vec<BaseExecutable>,
     pub unknown: Vec<Unknown>,
     pub shallow_code: Vec<ShallowParsedLine>,
+    pub imports: Vec<BaseStatement>,
 }
 
 #[pymethods]
@@ -32,6 +33,7 @@ impl BaseCode{
     pub fn executables(&self) -> Vec<BaseExecutable> {self.executables.clone()}
     pub fn unknown(&self) -> Vec<Unknown> {self.unknown.clone()}
     pub fn shallow_code(&self) -> Vec<ShallowParsedLine> { self.shallow_code.clone() }
+    pub fn imports(&self) -> Vec<BaseStatement> {self.imports.clone()}
 }
 
 #[pyfunction]
@@ -40,6 +42,7 @@ pub fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<Base
     let mut statements: Vec<BaseStatement> = Vec::new();
     let mut executables: Vec<BaseExecutable> = Vec::new();
     let mut unknowns: Vec<Unknown> = Vec::new();
+    let mut imports: Vec<BaseStatement> = Vec::new();
     for shallow_line in shallow_code.iter() {
                     match shallow_line.line_code_type {
                 CodeType::Variable => {
@@ -50,7 +53,12 @@ pub fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<Base
                 CodeType::Statement => {
                     let statement = BaseStatement::from(shallow_line.to_owned());
                     if statement.is_err() {return Err(statement.unwrap_err())}
-                    statements.push(statement.unwrap());
+                    let statement = statement.unwrap();
+
+                    if statement.statement_type == StatementType::Import {
+                        imports.push(statement.clone())
+                    }
+                    statements.push(statement);
                 }
                 CodeType::Executable => {
                     let executable = BaseExecutable::from(shallow_line.to_owned());
@@ -70,20 +78,23 @@ pub fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<Base
         executables: executables,
         unknown: unknowns,
         shallow_code: shallow_code,
+        imports: imports,
     })
 }
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub struct BaseGlobals {
-    pub global_code: BaseCode,
-    pub global_objects: Vec<Object>,
-    pub global_methods: Vec<Method>,
+pub struct BaseFile {
+    pub name: String,
+    pub code: BaseCode,
+    pub objects: Vec<Object>,
+    pub methods: Vec<Method>,
 }
 
 #[pymethods]
-impl BaseGlobals {
-    pub fn global_code(&self) -> BaseCode {self.global_code.clone()}
-    pub fn global_objects(&self) -> Vec<Object> {self.global_objects.clone()}
-    pub fn global_methods(&self) -> Vec<Method> {self.global_methods.clone()}
+impl BaseFile {
+    pub fn code(&self) -> BaseCode {self.code.clone()}
+    pub fn objects(&self) -> Vec<Object> {self.objects.clone()}
+    pub fn methods(&self) -> Vec<Method> {self.methods.clone()}
+    pub fn name(&self) -> String {self.name.clone()}
 }

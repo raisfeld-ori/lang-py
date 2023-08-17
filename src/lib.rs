@@ -1,5 +1,6 @@
 mod extras;
 mod parsing;
+mod python_std;
 
 
 use pyo3::prelude::*;
@@ -9,6 +10,7 @@ use parsing::base_parser::*;
 use extras::outputs::*;
 use parsing::base_types::*;
 use extras::actions::*;
+use python_std::types::*;
 
 // the core parsing classes and functions.
 #[pymodule]
@@ -31,9 +33,16 @@ fn actions(_py: Python, module: &PyModule) -> PyResult<()>{
     module.add_wrapped(wrap_pyfunction!(async_scan))?;
     module.add_wrapped(wrap_pyfunction!(async_parse_methods))?;
     module.add_wrapped(wrap_pyfunction!(async_parse_objects))?;
-    module.add_wrapped(wrap_pyfunction!(async_parse_code))?;
+    module.add_wrapped(wrap_pyfunction!(async_parse_file))?;
     module.add_class::<AllOutputs>()?;
     module.add_class::<BaseCode>()?;
+    module.add_class::<BaseFile>()?;
+    Ok(())
+}
+
+#[pymodule]
+fn standard(_py: Python, module: &PyModule) -> PyResult<()>{
+    module.add_class::<BasicType>();
     Ok(())
 }
 
@@ -42,5 +51,6 @@ fn actions(_py: Python, module: &PyModule) -> PyResult<()>{
 fn lang_py(_py: Python, module: &PyModule) -> PyResult<()> {
     module.add_wrapped(wrap_pymodule!(parse))?;
     module.add_wrapped(wrap_pymodule!(actions))?;
+    module.add_wrapped(wrap_pymodule!(standard))?;
     Ok(())
 }

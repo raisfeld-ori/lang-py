@@ -9,9 +9,8 @@ class example(object):
         return
     @staticmethod
     def print() -> object:
-        return """test
-        test2
-        """
+        return """test"""
+example().print()
 def foo(bar: str) -> None:
     if "foo" == bar:
         print("test","test2")

@@ -64,6 +64,7 @@ pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> P
     let statements: Arc<RwLock<Vec<BaseStatement>>> = Arc::new(RwLock::new(Vec::new()));
     let executables: Arc<RwLock<Vec<BaseExecutable>>> = Arc::new(RwLock::new(Vec::new()));
     let unknowns: Arc<RwLock<Vec<Unknown>>> = Arc::new(RwLock::new(Vec::new()));
+    let imports: Arc<RwLock<Vec<BaseStatement>>> = Arc::new(RwLock::new(Vec::new()));
 
     for shallow_line in shallow_code.iter() {
         let variables = variables.clone();
@@ -71,6 +72,7 @@ pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> P
         let executables = executables.clone();
         let unknowns = unknowns.clone();
         let shallow_line = shallow_line.clone();
+        let imports = imports.clone();
         threads.push(spawn(async move{
             match shallow_line.line_code_type {
                 CodeType::Variable => {
@@ -81,7 +83,13 @@ pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> P
                 CodeType::Statement => {
                     let statement = BaseStatement::from(shallow_line.to_owned());
                     if statement.is_err() {return Some(statement.unwrap_err())}
-                    statements.write().await.push(statement.unwrap());
+                    let statement = statement.unwrap();
+
+                    if statement.clone().statement_type == StatementType::Import {
+                        imports.write().await.push(statement.clone())
+                    }
+
+                    statements.write().await.push(statement);
                 }
                 CodeType::Executable => {
                     let executable = BaseExecutable::from(shallow_line.to_owned());
@@ -108,6 +116,7 @@ pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> P
     let statements = statements.read().await;
     let executables = executables.read().await;
     let unknowns = unknowns.read().await;
+    let imports = imports.read().await;
 
     return Ok(BaseCode {
         variables: variables.clone(),
@@ -115,6 +124,7 @@ pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> P
         executables: executables.clone(),
         unknown: unknowns.clone(),
         shallow_code: shallow_code.clone(),
+        imports: imports.clone(),
         })
 }
 
@@ -155,7 +165,7 @@ pub fn async_parse_objects(statements: Vec<BaseStatement>, all_lines: Vec<Shallo
 
 // a combination of other async functions, in order to parse the code as fast as possible.
 #[pyfunction]
-pub fn async_parse_code(text: String) -> PyResult<BaseGlobals> {
+pub fn async_parse_file(text: String, name: String) -> PyResult<BaseFile> {
     let base_code = async_scan(text).unwrap();
     let methods = async_parse_methods(base_code.statements.clone(), base_code.shallow_code.clone());
     if methods.is_err() {return Err(methods.unwrap_err())}
@@ -169,12 +179,14 @@ pub fn async_parse_code(text: String) -> PyResult<BaseGlobals> {
     for object in objects {
         if object.actual_line.actual_line.all_spaces == 0 {
             positions.push(object.actual_line.actual_line.position);
+            for line in object.lines.iter() {positions.push(line.position)}
             global_objects.push(object.clone())
         }
     }
     for method in methods {
         if method.actual_line.actual_line.all_spaces == 0 {
             positions.push(method.actual_line.actual_line.position);
+            for line in method.lines.iter() {positions.push(line.position)}
             global_methods.push(method.clone());
         }
     }
@@ -215,9 +227,13 @@ pub fn async_parse_code(text: String) -> PyResult<BaseGlobals> {
         executables: executables,
         unknown: unknown,
         shallow_code: shallow_code,
+        imports: base_code.imports,
     };
 
-    return BaseGlobals {
-
-    }
+    return Ok(BaseFile {
+        name: name,
+        methods: global_methods,
+        objects: global_objects,
+        code: global_code,
+    })
 }

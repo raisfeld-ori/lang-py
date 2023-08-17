@@ -178,17 +178,22 @@ impl Object{
         let mut lines: Vec<ShallowParsedLine> = Vec::new();
         let mut methods: Vec<Method> = Vec::new();
         let mut iter_methods = parsed_methods.iter();
-        let mut current_method = iter_methods.next().unwrap();
+        let mut current_method = iter_methods.next();
         for other_line in all_lines.iter() {
             if other_line.position > statement.actual_line.position {
+                while current_method.is_some()
+                && current_method.unwrap().actual_line.actual_line.position < other_line.position{
+                    current_method = iter_methods.next();
+                }
+                if current_method.is_none() {break}
 
                 if other_line.all_spaces <= statement.actual_line.all_spaces
                     && other_line.actual_line.replace(" ", "") != ""{ break }
 
                 if other_line.line_code_type == CodeType::Statement
-                    && other_line.position == current_method.actual_line.actual_line.position {
-                         methods.push(current_method.clone());
-                        current_method = iter_methods.next().unwrap();
+                    && other_line.position == current_method.unwrap().actual_line.actual_line.position {
+                         methods.push(current_method.unwrap().clone());
+                        current_method = iter_methods.next();
                 }
                 lines.push(other_line.clone());
             }
