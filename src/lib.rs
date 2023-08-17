@@ -42,7 +42,7 @@ fn actions(_py: Python, module: &PyModule) -> PyResult<()>{
 
 #[pymodule]
 fn standard(_py: Python, module: &PyModule) -> PyResult<()>{
-    module.add_class::<BasicType>();
+    module.add_class::<StdTypes>()?;
     Ok(())
 }
 
