@@ -10,9 +10,8 @@ if __name__ == '__main__':
     )
     try:
         data = console.open_file()
-        result = lang_py.actions.async_parse_file(data, "example")
-        test = lang_py.standard.StdTypes.parse_from("'234")
-        console.log(test)
+        result = lang_py.actions.async_get_module(data, "example")
+        console.log(lang_py.standard.StdTypes.parse_type(result.code().variables()[0].value()))
 
         console.graceful_exit()
     except Exception as error:

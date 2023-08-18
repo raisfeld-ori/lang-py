@@ -1,4 +1,4 @@
-var: int = 0
+var: float = 0.1
 print(var)
 if var + 2 == 1:
     "this line doesn't do anything"

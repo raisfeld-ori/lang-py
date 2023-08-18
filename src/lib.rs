@@ -10,7 +10,7 @@ use parsing::base_parser::*;
 use extras::outputs::*;
 use parsing::base_types::*;
 use extras::actions::*;
-use python_std::types::*;
+use python_std::std_types::*;
 
 // the core parsing classes and functions.
 #[pymodule]
@@ -18,9 +18,9 @@ fn parse(_py: Python, module: &PyModule) -> PyResult<()> {
     module.add_wrapped(wrap_pyfunction!(parse_methods))?;
     module.add_wrapped(wrap_pyfunction!(parse_objects))?;
     module.add_wrapped(wrap_pyfunction!(create_base_output))?;
-    module.add_class::<Method>()?;
+    module.add_class::<BaseMethod>()?;
     module.add_class::<ShallowParsedLine>()?;
-    module.add_class::<Object>()?;
+    module.add_class::<BaseObject>()?;
     module.add_class::<BaseVar>()?;
     module.add_class::<BaseStatement>()?;
     module.add_class::<BaseExecutable>()?;
@@ -33,10 +33,11 @@ fn actions(_py: Python, module: &PyModule) -> PyResult<()>{
     module.add_wrapped(wrap_pyfunction!(async_scan))?;
     module.add_wrapped(wrap_pyfunction!(async_parse_methods))?;
     module.add_wrapped(wrap_pyfunction!(async_parse_objects))?;
-    module.add_wrapped(wrap_pyfunction!(async_parse_file))?;
+    module.add_wrapped(wrap_pyfunction!(async_get_module))?;
+    module.add_class::<PythonType>()?;
     module.add_class::<AllOutputs>()?;
     module.add_class::<BaseCode>()?;
-    module.add_class::<BaseFile>()?;
+    module.add_class::<BaseModule>()?;
     Ok(())
 }
 

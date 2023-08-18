@@ -5,12 +5,11 @@ full of classes that compile information
 
 use pyo3::prelude::*;
 use crate::parsing::base_parser::*;
-use crate::parsing::base_types::{Method, Object, StatementType};
-
+use crate::parsing::base_types::{BaseMethod, BaseObject, StatementType};
 
 #[pyclass]
 pub enum AllOutputs{
-    BaseCode, BaseGlobals
+    BaseCode, BaseModule
 }
 
 #[derive(Clone, Debug)]
@@ -84,17 +83,17 @@ pub fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<Base
 
 #[derive(Debug, Clone)]
 #[pyclass]
-pub struct BaseFile {
+pub struct BaseModule {
     pub name: String,
     pub code: BaseCode,
-    pub objects: Vec<Object>,
-    pub methods: Vec<Method>,
+    pub objects: Vec<BaseObject>,
+    pub methods: Vec<BaseMethod>,
 }
 
 #[pymethods]
-impl BaseFile {
+impl BaseModule {
     pub fn code(&self) -> BaseCode {self.code.clone()}
-    pub fn objects(&self) -> Vec<Object> {self.objects.clone()}
-    pub fn methods(&self) -> Vec<Method> {self.methods.clone()}
+    pub fn objects(&self) -> Vec<BaseObject> {self.objects.clone()}
+    pub fn methods(&self) -> Vec<BaseMethod> {self.methods.clone()}
     pub fn name(&self) -> String {self.name.clone()}
 }

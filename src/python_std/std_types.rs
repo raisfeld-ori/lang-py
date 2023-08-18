@@ -1,24 +1,37 @@
 use pyo3::prelude::*;
+use crate::parsing::base_parser::BaseVar;
+use crate::parsing::base_types::*;
 
 static STRINGS: [char; 2] = ['\"', '\''];
 static NUMBERS: [char; 10] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+static NAMED: [(&str, StdTypes); 5] = [("True", StdTypes::Bool), ("False", StdTypes::Bool),
+        ("Set", StdTypes::Set), ("frozenset", StdTypes::FrozenSet),
+        ("bytes", StdTypes::Bytes)];
 
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
+#[pyclass]
+pub struct PythonType (Type);
+
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
+pub enum Type {
+    Standard (StdTypes), Object (BaseObject),
+    Method (BaseMethod), Module (BaseMethod),
+}
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 #[pyclass]
 pub enum StdTypes{
     Int, Float, Str, List, Dict, Set,
     Bool, Range, Bytes, ByteArray, Module,
-    FrozenSet, ContextManager,
+    FrozenSet,
 }
 
-#[pymethods]
 impl StdTypes {
-    #[staticmethod]
-    pub fn parse_from(val: String) -> Option<StdTypes> {
+    pub fn parse_value(var: BaseVar) -> Option<StdTypes> {
         let mut current_type: Option<StdTypes> = None;
         let mut saved_letter: char = ' ';
 
-        for letter in val.chars(){
+        for letter in var.actual_line.actual_line.chars(){
             if STRINGS.contains(&letter) {
                 if saved_letter == letter {current_type = Some(StdTypes::Str);break}
                 else {saved_letter = letter;}
@@ -29,9 +42,10 @@ impl StdTypes {
                 break
             }
         }
+        for (name, name_type) in NAMED.iter() {
+            if var.actual_line.actual_line.replace(" ", "").starts_with(name) {current_type = Some(name_type.clone())}
+        }
 
-        if val.replace(" ", "").starts_with('[')
-        && val.replace(" ", "").ends_with(']') {current_type = Some(StdTypes::List);}
 
         return current_type;
     }

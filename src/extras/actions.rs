@@ -25,24 +25,24 @@ pub fn async_scan(text: String) -> PyResult<BaseCode> {
 
 
 #[pyfunction]
-pub fn async_parse_methods(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>) -> PyResult<Vec<Method>> {
+pub fn async_parse_methods(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>) -> PyResult<Vec<BaseMethod>> {
     let runner = Builder::new_multi_thread().build().unwrap();
-    let thread: thread::JoinHandle<PyResult<Vec<Method>>>= thread::spawn(move ||{
+    let thread: thread::JoinHandle<PyResult<Vec<BaseMethod>>>= thread::spawn(move ||{
             runner.block_on(async move {
-                let mut threads: Vec<JoinHandle<Option<PyResult<Method>>>> = Vec::new();
+                let mut threads: Vec<JoinHandle<Option<PyResult<BaseMethod>>>> = Vec::new();
                 for statement in statements{
                     let statement_owned = statement.to_owned();
                     let all_lines_owned = all_lines.to_owned();
                     threads.push(spawn(async move {
                         if statement_owned.statement_type == StatementType::Def{
-                            Some(Method::from(statement_owned, all_lines_owned))
+                            Some(BaseMethod::from(statement_owned, all_lines_owned))
                         }
                         else {
                             None
                         }
                     }));
                 }
-                let mut base_methods: Vec<Method> = Vec::new();
+                let mut base_methods: Vec<BaseMethod> = Vec::new();
                 for thread in threads{
                     let output = thread.await.unwrap();
                     if output.is_none() {continue;}
@@ -130,25 +130,25 @@ pub async fn async_create_base_output(shallow_code: Vec<ShallowParsedLine>) -> P
 
 // an async function that parses all statements and parses the objects
 #[pyfunction]
-pub fn async_parse_objects(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>, methods: Vec<Method>) -> PyResult<Vec<Object>> {
+pub fn async_parse_objects(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParsedLine>, methods: Vec<BaseMethod>) -> PyResult<Vec<BaseObject>> {
     let runner = Builder::new_multi_thread().build().unwrap();
-    let thread: thread::JoinHandle<PyResult<Vec<Object>>>= thread::spawn(move ||{
+    let thread: thread::JoinHandle<PyResult<Vec<BaseObject>>>= thread::spawn(move ||{
             runner.block_on(async move {
-                let mut threads: Vec<JoinHandle<Option<PyResult<Object>>>> = Vec::new();
+                let mut threads: Vec<JoinHandle<Option<PyResult<BaseObject>>>> = Vec::new();
                 for statement in statements{
                     let statement_owned = statement.to_owned();
                     let all_lines_owned = all_lines.to_owned();
                     let methods_owned = methods.to_owned();
                     threads.push(spawn(async move {
                         if statement_owned.statement_type == StatementType::Class{
-                            Some(Object::from(statement_owned, all_lines_owned, methods_owned))
+                            Some(BaseObject::from(statement_owned, all_lines_owned, methods_owned))
                         }
                         else {
                             None
                         }
                     }));
                 }
-                let mut base_methods: Vec<Object> = Vec::new();
+                let mut base_methods: Vec<BaseObject> = Vec::new();
                 for thread in threads{
                     let output = thread.await.unwrap();
                     if output.is_none() {continue;}
@@ -165,17 +165,17 @@ pub fn async_parse_objects(statements: Vec<BaseStatement>, all_lines: Vec<Shallo
 
 // a combination of other async functions, in order to parse the code as fast as possible.
 #[pyfunction]
-pub fn async_parse_file(text: String, name: String) -> PyResult<BaseFile> {
+pub fn async_get_module(text: String, name: String) -> PyResult<BaseModule> {
     let base_code = async_scan(text).unwrap();
     let methods = async_parse_methods(base_code.statements.clone(), base_code.shallow_code.clone());
     if methods.is_err() {return Err(methods.unwrap_err())}
-    let methods: Vec<Method> = methods.unwrap();
+    let methods: Vec<BaseMethod> = methods.unwrap();
     let objects = async_parse_objects(base_code.statements.clone(), base_code.shallow_code.clone(), methods.clone());
     if objects.is_err() {return Err(objects.unwrap_err())}
     let objects = objects.unwrap();
     let mut positions: Vec<usize> = Vec::new();
-    let mut global_objects: Vec<Object> = Vec::new();
-    let mut global_methods: Vec<Method> = Vec::new();
+    let mut global_objects: Vec<BaseObject> = Vec::new();
+    let mut global_methods: Vec<BaseMethod> = Vec::new();
     for object in objects {
         if object.actual_line.actual_line.all_spaces == 0 {
             positions.push(object.actual_line.actual_line.position);
@@ -230,7 +230,7 @@ pub fn async_parse_file(text: String, name: String) -> PyResult<BaseFile> {
         imports: base_code.imports,
     };
 
-    return Ok(BaseFile {
+    return Ok(BaseModule {
         name: name,
         methods: global_methods,
         objects: global_objects,
