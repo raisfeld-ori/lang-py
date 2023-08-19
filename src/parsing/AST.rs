@@ -21,6 +21,6 @@ impl Operation for Addition{
                 "the operation is not addition".to_string(),
                 Some("".to_string())).to_pyerr());
         }
-        
+
     }
 }
