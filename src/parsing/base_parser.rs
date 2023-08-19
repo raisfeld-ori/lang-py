@@ -106,7 +106,7 @@ impl ShallowParsedLine {
 
 
 // a basic variable structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 #[pyclass]
 pub struct BaseVar {
     pub name: String,
@@ -202,7 +202,7 @@ impl BaseStatement {
 }
 
 #[pyclass]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct BaseExecutable {
     pub actual_line: ShallowParsedLine,
     pub components: Vec<String>,

@@ -46,7 +46,7 @@ impl HandledError for FailedOutputError{
     }
 }
 
-
+#[pyclass]#[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct NotClassError(pub String, pub Option<String>);
 
 impl HandledError for NotClassError {
@@ -56,4 +56,13 @@ impl HandledError for NotClassError {
         );
     }
 }
+#[pyclass] #[derive(Clone, Debug, PartialOrd, PartialEq)]
+pub struct WrongOperationError(pub String, pub Option<String>);
 
+impl HandledError for WrongOperationError {
+    fn to_pyerr(&self) -> PyErr {
+        return PyErr::new::<PyBaseException, String>(
+            format!("WrongOperationError: {}\nsuggestion: {}", self.0, self.1.clone().unwrap_or("()".to_string()))
+        );
+    }
+}

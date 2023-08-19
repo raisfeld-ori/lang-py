@@ -1,4 +1,5 @@
 use pyo3::prelude::*;
+use crate::extras::outputs::BaseModule;
 use crate::parsing::base_parser::BaseVar;
 use crate::parsing::base_types::*;
 
@@ -8,6 +9,7 @@ static NAMED: [(&str, StdTypes); 5] = [("True", StdTypes::Bool), ("False", StdTy
         ("Set", StdTypes::Set), ("frozenset", StdTypes::FrozenSet),
         ("bytes", StdTypes::Bytes)];
 
+
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 #[pyclass]
 pub struct PythonType (Type);
@@ -16,8 +18,9 @@ pub struct PythonType (Type);
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub enum Type {
     Standard (StdTypes), Object (BaseObject),
-    Method (BaseMethod), Module (BaseMethod),
+    Method (BaseMethod), Module (BaseModule),
 }
+
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 #[pyclass]
 pub enum StdTypes{
