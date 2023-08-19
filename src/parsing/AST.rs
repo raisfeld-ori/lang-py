@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 use crate::extras::errors::{HandledError, WrongOperationError};
-use crate::python_std::std_types::StdTypes;
 
 pub trait Operation {
     type First;
@@ -21,6 +20,6 @@ impl Operation for Addition{
                 "the operation is not addition".to_string(),
                 Some("".to_string())).to_pyerr());
         }
-
+        return Ok(Addition ("".to_string(), "".to_string()))
     }
 }

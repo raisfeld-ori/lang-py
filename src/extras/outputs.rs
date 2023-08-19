@@ -6,7 +6,6 @@ full of classes that compile information
 use pyo3::prelude::*;
 use crate::parsing::base_parser::*;
 use crate::parsing::base_types::{BaseMethod, BaseObject, StatementType};
-use crate::python_std::std_types::IsType;
 
 #[pyclass]
 pub enum AllOutputs{
@@ -97,11 +96,4 @@ impl BaseModule {
     pub fn objects(&self) -> Vec<BaseObject> {self.objects.clone()}
     pub fn methods(&self) -> Vec<BaseMethod> {self.methods.clone()}
     pub fn name(&self) -> String {self.name.clone()}
-}
-
-impl IsType for BaseModule {
-    fn is_method(&self) -> bool {false}
-    fn is_module(&self) -> bool { true }
-    fn is_object(&self) -> bool { false }
-    fn is_std_type(&self) -> bool { false }
 }
