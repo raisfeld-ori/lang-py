@@ -3,9 +3,13 @@ outputs:
 full of classes that compile information
  */
 
+use std::cmp::Ordering;
 use pyo3::prelude::*;
 use crate::parsing::base_parser::*;
 use crate::parsing::base_types::{BaseMethod, BaseObject, StatementType};
+use std::collections::HashMap;
+use std::ops::Deref;
+use crate::python_std::std_types::{PythonType, Type};
 
 #[pyclass]
 pub enum AllOutputs{
@@ -81,13 +85,51 @@ pub fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<Base
     })
 }
 
-#[derive(Debug, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[pyclass]
 pub struct BaseModule {
     pub name: String,
     pub code: BaseCode,
     pub objects: Vec<BaseObject>,
     pub methods: Vec<BaseMethod>,
+    pub all: HashMap<String, Type>,
+}
+// HashMap doesn't implement PartialOrd ):
+impl PartialOrd for BaseModule {
+    fn ge(&self, other: &Self) -> bool {
+        return self.name.ge(&other.name)
+            && self.code.ge(&other.code)
+            && self.objects.ge(&other.objects)
+            && self.methods.ge(&other.methods);
+    }
+    fn gt(&self, other: &Self) -> bool {
+        return self.name.gt(&other.name)
+            && self.code.gt(&other.code)
+            && self.objects.gt(&other.objects)
+            && self.methods.gt(&other.methods);
+    }
+    fn le(&self, other: &Self) -> bool {
+        return self.name.le(&other.name)
+            && self.code.le(&other.code)
+            && self.objects.le(&other.objects)
+            && self.methods.le(&other.methods);
+    }
+    fn lt(&self, other: &Self) -> bool {
+        return self.name.lt(&other.name)
+            && self.code.lt(&other.code)
+            && self.objects.lt(&other.objects)
+            && self.methods.lt(&other.methods);
+    }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self.name.partial_cmp(&other.name)
+            .and_then(|o| if o == Ordering::Equal { self.code.partial_cmp(&other.code) } else { Some(o) })
+            .and_then(|o| if o == Ordering::Equal { self.objects.partial_cmp(&other.objects) } else { Some(o) })
+            .and_then(|o| if o == Ordering::Equal { self.methods.partial_cmp(&other.methods) } else { Some(o) }) {
+                Some(Ordering::Greater) | Some(Ordering::Equal) => Some(Ordering::Equal),
+                Some(Ordering::Less) => Some(Ordering::Less),
+                None => None,
+        }
+    }
 }
 
 #[pymethods]
@@ -96,4 +138,24 @@ impl BaseModule {
     pub fn objects(&self) -> Vec<BaseObject> {self.objects.clone()}
     pub fn methods(&self) -> Vec<BaseMethod> {self.methods.clone()}
     pub fn name(&self) -> String {self.name.clone()}
+    pub fn all_names(&self) -> Vec<String> {
+        (*self
+            .all
+            .clone()
+            .keys()
+            .into_iter()
+            .map(|key| key.deref().to_string())
+            .collect::<Vec<String>>()
+        ).to_vec()
+    }
+    pub fn all_classes(&self) -> Vec<PythonType> {
+        (*self
+            .all
+            .clone()
+            .values()
+            .into_iter()
+            .map(|key| PythonType (key.clone()))
+            .collect::<Vec<PythonType>>()
+        ).to_vec()
+    }
 }

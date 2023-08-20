@@ -12,7 +12,7 @@ static NAMED: [(&str, StdTypes); 5] = [("True", StdTypes::Bool), ("False", StdTy
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 #[pyclass]
-pub struct PythonType (Type);
+pub struct PythonType (pub Type);
 
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
