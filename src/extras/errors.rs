@@ -56,3 +56,14 @@ impl HandledError for NotClassError {
         );
     }
 }
+
+#[pyclass]#[derive(Clone, Debug, PartialOrd, PartialEq)]
+pub struct NotOperationError(pub String, pub Option<String>);
+
+impl HandledError for NotOperationError {
+    fn to_pyerr(&self) -> PyErr  {
+        return PyErr::new::<PyBaseException, String>(
+            format!("NotOperationError: {}\nsuggestion: {}", self.0, self.1.clone().unwrap_or("()".to_string()))
+        );
+    }
+}

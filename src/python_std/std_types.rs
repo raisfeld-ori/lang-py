@@ -5,9 +5,12 @@ use crate::parsing::base_types::*;
 
 static STRINGS: [char; 2] = ['\"', '\''];
 static NUMBERS: [char; 10] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-static NAMED: [(&str, StdTypes); 5] = [("True", StdTypes::Bool), ("False", StdTypes::Bool),
-        ("Set", StdTypes::Set), ("frozenset", StdTypes::FrozenSet),
-        ("bytes", StdTypes::Bytes)];
+static NAMED: [(&str, StdTypes); 11] = [("True", StdTypes::Bool), ("False", StdTypes::Bool),
+    ("Set", StdTypes::Set), ("frozenset", StdTypes::FrozenSet),
+    ("bytes", StdTypes::Bytes), ("int", StdTypes::Int), ("str", StdTypes::Str),
+    ("float", StdTypes::Float), ("list", StdTypes::List), ("len", StdTypes::Int),
+    ("bool", StdTypes::Bool)
+];
 
 
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
