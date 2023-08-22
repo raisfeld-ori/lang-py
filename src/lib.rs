@@ -24,6 +24,8 @@ fn parse(_py: Python, module: &PyModule) -> PyResult<()> {
     module.add_class::<BaseVar>()?;
     module.add_class::<BaseStatement>()?;
     module.add_class::<BaseExecutable>()?;
+    module.add_class::<Operations>()?;
+    module.add_class::<AbstractSyntaxTree>()?;
     Ok(())
 }
 
