@@ -13,10 +13,10 @@ use crate::parsing::object_parsing::StatementType;
 
 
 static OPERATORS: [char; 3] = ['>', '<', '!'];
-static STATEMENTS: [&str; 13] = ["if", "else", "elif",
+static STATEMENTS: [&str; 14] = ["if", "else", "elif",
     "for", "def", "async", "try", "except",
     "finally", "while", "from",
-    "class", "with"];
+    "class", "with", "global"];
 pub static OPERATION_NOTATIONS: [&str; 26] = [
     "+", "-", "*", "/", "%", "**", "//", "<",
     ">", "<=", ">=", "==", "!=", "&", "|",

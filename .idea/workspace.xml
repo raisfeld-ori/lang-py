@@ -9,17 +9,10 @@
   <component name="ChangeListManager">
     <list default="true" id="ce942fcf-f242-4970-b8fe-f665bdb272a9" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/extras/actions.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/extras/actions.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/extras/outputs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/extras/outputs.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/parsing.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/parsing/base_parser.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing/base_parser.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/parsing/base_types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing/object_parsing.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/python_std.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/python_std.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/python_std/std_types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/python_std/std_types.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/python_std/type_parsing.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing/type_parsing.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/example.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/parsing/object_parsing.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing/object_parsing.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/parsing/type_parsing.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parsing/type_parsing.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

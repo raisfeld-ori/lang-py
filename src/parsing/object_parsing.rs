@@ -300,7 +300,7 @@ pub fn get_module(objects: Vec<BaseObject>, methods: Vec<BaseMethod>, base_code:
         shallow_code: shallow_code,
         imports: base_code.imports,
     };
-
+    
     return Ok(BaseModule {
         name: name,
         methods: global_methods,

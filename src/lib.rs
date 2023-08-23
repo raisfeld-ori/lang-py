@@ -19,6 +19,7 @@ fn parse(_py: Python, module: &PyModule) -> PyResult<()> {
     module.add_wrapped(wrap_pyfunction!(parse_methods))?;
     module.add_wrapped(wrap_pyfunction!(parse_objects))?;
     module.add_wrapped(wrap_pyfunction!(create_base_output))?;
+    module.add_wrapped(wrap_pyfunction!(get_module))?;
     module.add_class::<BaseMethod>()?;
     module.add_class::<ShallowParsedLine>()?;
     module.add_class::<BaseObject>()?;
