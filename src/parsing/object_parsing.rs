@@ -1,6 +1,9 @@
 use pyo3::prelude::*;
 use crate::parsing::base_parser::*;
 use crate::extras::errors::{HandledError, NotClassError, NotStatementError};
+use crate::extras::outputs::{BaseCode, BaseModule};
+use crate::python_std::std_types::Type;
+use std::collections::HashMap;
 
 
 // every type of statement
@@ -234,4 +237,75 @@ pub fn parse_methods(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParse
         }
     }
     return Ok(objects);
+}
+
+#[pyfunction]
+pub fn get_module(objects: Vec<BaseObject>, methods: Vec<BaseMethod>, base_code: BaseCode, name: String) -> PyResult<BaseModule>{
+    let mut positions: Vec<usize> = Vec::new();
+    let mut all_global: HashMap<String, Type> = HashMap::new();
+    let mut global_objects: Vec<BaseObject> = Vec::new();
+    let mut global_methods: Vec<BaseMethod> = Vec::new();
+    for object in objects {
+        if object.actual_line.actual_line.all_spaces == 0 {
+            positions.push(object.actual_line.actual_line.position);
+            for line in object.lines.iter() {positions.push(line.position)}
+            global_objects.push(object.clone());
+            all_global.insert(object.name.clone(),  Type::Object(object));
+        }
+    }
+    for method in methods {
+        if method.actual_line.actual_line.all_spaces == 0 {
+            positions.push(method.actual_line.actual_line.position);
+            for line in method.lines.iter() {positions.push(line.position)}
+            global_methods.push(method.clone());
+            all_global.insert(method.name.clone(), Type::Method(method.clone()));
+        }
+    }
+    let variables: Vec<BaseVar> = base_code.variables
+        .into_iter()
+        .filter(|var|
+            !positions.contains(&var.actual_line.position)
+        && var.actual_line.all_spaces == 0)
+        .collect();
+    let statements: Vec<BaseStatement> = base_code.statements
+        .into_iter()
+        .filter(|statement|
+            !positions.contains(&statement.actual_line.position)
+        && statement.actual_line.all_spaces == 0)
+        .collect();
+    let executables: Vec<BaseExecutable> = base_code.executables
+        .into_iter()
+        .filter(|exe|
+            !positions.contains(&exe.actual_line.position)
+        && exe.actual_line.all_spaces == 0)
+        .collect();
+    let unknown: Vec<Unknown> = base_code.unknown
+        .into_iter()
+        .filter(|unknown|
+            !positions.contains(&unknown.actual_line.position)
+        && unknown.actual_line.all_spaces == 0)
+        .collect();
+    let shallow_code: Vec<ShallowParsedLine> = base_code.shallow_code
+        .into_iter()
+        .filter(|line|
+            !positions.contains(&line.position)
+        && line.all_spaces == 0
+        )
+        .collect();
+    let global_code = BaseCode {
+        statements: statements,
+        variables: variables,
+        executables: executables,
+        unknown: unknown,
+        shallow_code: shallow_code,
+        imports: base_code.imports,
+    };
+
+    return Ok(BaseModule {
+        name: name,
+        methods: global_methods,
+        objects: global_objects,
+        code: global_code,
+        all: all_global,
+    })
 }

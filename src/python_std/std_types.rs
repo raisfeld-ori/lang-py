@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use crate::extras::outputs::BaseModule;
 use crate::parsing::base_parser::BaseVar;
-use crate::parsing::base_types::*;
+use crate::parsing::object_parsing::*;
 
 static STRINGS: [char; 2] = ['\"', '\''];
 static NUMBERS: [char; 10] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];

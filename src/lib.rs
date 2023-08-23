@@ -8,9 +8,10 @@ use pyo3::wrap_pymodule;
 use pyo3::wrap_pyfunction;
 use parsing::base_parser::*;
 use extras::outputs::*;
-use parsing::base_types::*;
+use parsing::object_parsing::*;
 use extras::actions::*;
 use python_std::std_types::*;
+use parsing::type_parsing::*;
 
 // the core parsing classes and functions.
 #[pymodule]

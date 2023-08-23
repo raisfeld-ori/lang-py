@@ -9,7 +9,7 @@ use crate::extras::errors::*;
 use tokio::task::{JoinHandle, spawn};
 use tokio::sync::RwLock;
 use std::sync::Arc;
-use crate::parsing::base_types::StatementType;
+use crate::parsing::object_parsing::StatementType;
 
 
 static OPERATORS: [char; 3] = ['>', '<', '!'];
@@ -207,50 +207,6 @@ impl BaseStatement {
     }
 }
 
-#[pyclass]#[derive(Clone, Debug, PartialOrd, PartialEq)]
-pub enum Operations{
-    Addition, Subtraction, Multiplication,
-    Division, Modulus, Exponentiation, Floor,
-    LessThan, GreaterThan, LessThanOrEqual,
-    GreaterThanOrEqual, EqualTo, NotEqual,
-    BitwiseAnd, BitwiseOr, BitwiseXor,
-    BitwiseNot, BitwiseRightShift,
-    BitwiseLeftShift, And, Or, Not,
-    In, NotIn, Is, NotIs
-}
-
-impl Operations{
-    pub fn get(character: String) -> PyResult<Operations> {
-            return match character.as_str() {
-                "+" => Ok(Operations::Addition),
-                "-" => Ok(Operations::Subtraction),
-                "/" => Ok(Operations::Division),
-                "%" => Ok(Operations::Modulus),
-                "//" => Ok(Operations::Floor),
-                ">" => Ok(Operations::GreaterThan),
-                "<" => Ok(Operations::LessThan),
-                "<=" => Ok(Operations::LessThanOrEqual),
-                ">=" => Ok(Operations::GreaterThanOrEqual),
-                "==" => Ok(Operations::NotEqual),
-                "!=" => Ok(Operations::NotEqual),
-                "&" => Ok(Operations::BitwiseAnd),
-                "|" => Ok(Operations::BitwiseOr),
-                "^" => Ok(Operations::BitwiseXor),
-                "~" => Ok(Operations::BitwiseNot),
-                ">>" => Ok(Operations::BitwiseLeftShift),
-                "<<" => Ok(Operations::BitwiseRightShift),
-                " and " => Ok(Operations::And),
-                " or " => Ok(Operations::Or),
-                " not " => Ok(Operations::Not),
-                " in " => Ok(Operations::In),
-                " not in " => Ok(Operations::NotIn),
-                " is " => Ok(Operations::Is),
-                " not is " => Ok(Operations::NotIs),
-                _ => Err(NotOperationError ("".to_string(), Some("".to_string())).to_pyerr()),
-            }
-    }
-}
-
 #[pyclass]
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 pub struct BaseExecutable {
@@ -267,9 +223,22 @@ impl BaseExecutable {
 impl BaseExecutable {
     pub fn from(line: ShallowParsedLine) -> PyResult<BaseExecutable> {
         let mut components: Vec<String> = Vec::new();
-        let actual_line = String::new();
-        for letter in line.actual_line{
-
+        let mut current_line = String::new();
+        for letter in line.actual_line.chars(){
+            match letter {
+                ')' => {
+                    components.push(current_line.clone());
+                    current_line.clear();
+                    current_line.push(letter);
+                }
+                '(' => {
+                    components.push(current_line.clone());
+                    current_line.clear();
+                    current_line.push(letter);
+                }
+                '.' => {components.push(current_line.clone());current_line.clear();}
+                _ => {current_line.push(letter)}
+            }
         }
         return Ok(BaseExecutable {
             actual_line: line,
@@ -277,40 +246,7 @@ impl BaseExecutable {
         });
     }
 }
-#[pyclass]#[derive(Clone, Debug, PartialOrd, PartialEq)]
-pub struct Component{
-    pub ast: AbstractSyntaxTree,
-    pub name: String,
-}
 
-#[pyclass]#[derive(Clone, Debug, PartialOrd, PartialEq)]
-pub struct AbstractSyntaxTree{
-    pub left: BaseExecutable,
-    pub operation: Operations,
-    pub right: BaseExecutable,
-}
-impl AbstractSyntaxTree {
-    pub fn from(line: String) -> Option<AbstractSyntaxTree> {
-        let mut first_operation = None;
-        let mut first_index = usize::MAX;
-
-        for &operation in OPERATION_NOTATIONS.iter() {
-            if let Some(index) = line.find(operation) {
-                if index < first_index {
-                    first_operation = Some(operation);
-                    first_index = index;
-                }
-            }
-        }
-        if first_operation.is_none() {return None;}
-        let left = &line[0..first_index.clone()];
-        let right = &line[first_index.clone()..];
-        println!("left: {}, right: {}", left, right);
-
-        return None;
-
-    }
-}
 #[derive(Clone, Debug, PartialOrd, PartialEq)]
 #[pyclass]
 pub struct Unknown {

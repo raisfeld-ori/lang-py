@@ -9,7 +9,7 @@ use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use std::collections::HashMap;
 use crate::python_std::std_types::Type;
-use crate::parsing::base_types::*;
+use crate::parsing::object_parsing::*;
 
 // scans the raw python code and turns it into variables, statements, executables and unknown
 #[pyfunction]

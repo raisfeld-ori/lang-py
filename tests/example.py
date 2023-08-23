@@ -10,7 +10,7 @@ class example(object):
     @staticmethod
     def print(test: int) -> object:
         return """test"""
-example().print(1+2 + 3)
+example().print(1+2 + (3).real)
 def foo(bar: str) -> None:
     if "foo" == bar:
         print(1 + (2 + 3))

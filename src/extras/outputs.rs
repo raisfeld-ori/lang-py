@@ -6,7 +6,7 @@ full of classes that compile information
 use std::cmp::Ordering;
 use pyo3::prelude::*;
 use crate::parsing::base_parser::*;
-use crate::parsing::base_types::{BaseMethod, BaseObject, StatementType};
+use crate::parsing::object_parsing::{BaseMethod, BaseObject, StatementType};
 use std::collections::HashMap;
 use std::ops::Deref;
 use crate::python_std::std_types::{PythonType, Type};
