@@ -167,7 +167,7 @@ pub fn async_parse_objects(statements: Vec<BaseStatement>, all_lines: Vec<Shallo
 // a combination of other async functions, in order to parse the code as fast as possible.
 #[pyfunction]
 pub fn async_get_module(text: String, name: String) -> PyResult<BaseModule> {
-    let base_code = async_scan(text).unwrap();
+    let base_code = async_scan(text.clone()).unwrap();
     let methods = async_parse_methods(base_code.statements.clone(), base_code.shallow_code.clone());
     if methods.is_err() {return Err(methods.unwrap_err())}
     let methods: Vec<BaseMethod> = methods.unwrap();
@@ -240,5 +240,6 @@ pub fn async_get_module(text: String, name: String) -> PyResult<BaseModule> {
         objects: global_objects,
         code: global_code,
         all: all_global,
+        actual_text: text,
     })
 }

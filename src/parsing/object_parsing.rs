@@ -240,7 +240,7 @@ pub fn parse_methods(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParse
 }
 
 #[pyfunction]
-pub fn get_module(objects: Vec<BaseObject>, methods: Vec<BaseMethod>, base_code: BaseCode, name: String) -> PyResult<BaseModule>{
+pub fn get_module(objects: Vec<BaseObject>, methods: Vec<BaseMethod>, base_code: BaseCode, name: String, actual_text: String) -> PyResult<BaseModule>{
     let mut positions: Vec<usize> = Vec::new();
     let mut all_global: HashMap<String, Type> = HashMap::new();
     let mut global_objects: Vec<BaseObject> = Vec::new();
@@ -300,12 +300,13 @@ pub fn get_module(objects: Vec<BaseObject>, methods: Vec<BaseMethod>, base_code:
         shallow_code: shallow_code,
         imports: base_code.imports,
     };
-    
+
     return Ok(BaseModule {
         name: name,
         methods: global_methods,
         objects: global_objects,
         code: global_code,
         all: all_global,
+        actual_text: actual_text.clone(),
     })
 }

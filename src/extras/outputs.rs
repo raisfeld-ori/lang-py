@@ -88,6 +88,7 @@ pub fn create_base_output(shallow_code: Vec<ShallowParsedLine>) -> PyResult<Base
 #[derive(Debug, Clone, PartialEq)]
 #[pyclass]
 pub struct BaseModule {
+    pub actual_text: String,
     pub name: String,
     pub code: BaseCode,
     pub objects: Vec<BaseObject>,
