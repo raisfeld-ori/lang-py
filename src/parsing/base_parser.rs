@@ -12,8 +12,8 @@ use std::sync::Arc;
 use crate::parsing::object_parsing::StatementType;
 
 
-static OPERATORS: [char; 3] = ['>', '<', '!'];
-static STATEMENTS: [&str; 14] = ["if", "else", "elif",
+pub static OPERATORS: [char; 3] = ['>', '<', '!'];
+pub static STATEMENTS: [&str; 14] = ["if", "else", "elif",
     "for", "def", "async", "try", "except",
     "finally", "while", "from",
     "class", "with", "global"];

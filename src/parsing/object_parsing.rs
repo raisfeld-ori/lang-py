@@ -12,7 +12,7 @@ use std::collections::HashMap;
 pub enum StatementType {
     For, While, Import, Try, Except, If,
     Else, Elif, With, Class, Finally, Def,
-    From
+    From, Global
 }
 
 impl StatementType{

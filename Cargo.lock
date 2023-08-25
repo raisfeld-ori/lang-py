@@ -168,6 +168,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa799dd5ed20a7e349f3b4639aa80d74549c81716d9ec4f994c9b5815598306"
 
 [[package]]
+name = "inventory"
+version = "0.3.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a53088c87cf71c9d4f3372a2cb9eea1e7b8a0b1bf8b7f7d23fe5b76dbb07e63b"
+
+[[package]]
 name = "lang-py"
 version = "0.1.0"
 dependencies = [
@@ -341,6 +347,7 @@ dependencies = [
  "hashbrown",
  "indexmap",
  "indoc",
+ "inventory",
  "libc",
  "memoffset",
  "num-bigint",
