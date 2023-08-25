@@ -11,7 +11,10 @@ if __name__ == '__main__':
     try:
         data = console.open_file()
         result = lang_py.actions.async_get_module(data, "example")
-        console.log(result.code().executables()[1].components())
+        for line in result.to_pysort():
+            console.log(line.shallow_global().actual_line())
+            console.window.input()
+            console.window.cls()
         console.graceful_exit()
     except Exception as error:
         console.panic(error, with_traceback=True)

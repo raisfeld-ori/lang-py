@@ -7,8 +7,6 @@ use tokio::spawn;
 use std::thread;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
-use std::collections::HashMap;
-use crate::python_std::std_types::Type;
 use crate::parsing::object_parsing::*;
 
 // scans the raw python code and turns it into variables, statements, executables and unknown
@@ -175,7 +173,6 @@ pub fn async_get_module(text: String, name: String) -> PyResult<BaseModule> {
     if objects.is_err() {return Err(objects.unwrap_err())}
     let objects = objects.unwrap();
     let mut positions: Vec<usize> = Vec::new();
-    let mut all_global: HashMap<String, Type> = HashMap::new();
     let mut global_objects: Vec<BaseObject> = Vec::new();
     let mut global_methods: Vec<BaseMethod> = Vec::new();
     for object in objects {
@@ -183,7 +180,6 @@ pub fn async_get_module(text: String, name: String) -> PyResult<BaseModule> {
             positions.push(object.actual_line.actual_line.position);
             for line in object.lines.iter() {positions.push(line.position)}
             global_objects.push(object.clone());
-            all_global.insert(object.name.clone(),  Type::Object(object));
         }
     }
     for method in methods {
@@ -191,7 +187,6 @@ pub fn async_get_module(text: String, name: String) -> PyResult<BaseModule> {
             positions.push(method.actual_line.actual_line.position);
             for line in method.lines.iter() {positions.push(line.position)}
             global_methods.push(method.clone());
-            all_global.insert(method.name.clone(), Type::Method(method.clone()));
         }
     }
     let variables: Vec<BaseVar> = base_code.variables
@@ -239,7 +234,6 @@ pub fn async_get_module(text: String, name: String) -> PyResult<BaseModule> {
         methods: global_methods,
         objects: global_objects,
         code: global_code,
-        all: all_global,
         actual_text: text,
     })
 }

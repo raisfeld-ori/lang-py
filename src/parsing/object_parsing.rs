@@ -2,8 +2,6 @@ use pyo3::prelude::*;
 use crate::parsing::base_parser::*;
 use crate::extras::errors::{HandledError, NotClassError, NotStatementError};
 use crate::extras::outputs::{BaseCode, BaseModule};
-use crate::python_std::std_types::Type;
-use std::collections::HashMap;
 
 
 // every type of statement
@@ -242,7 +240,6 @@ pub fn parse_methods(statements: Vec<BaseStatement>, all_lines: Vec<ShallowParse
 #[pyfunction]
 pub fn get_module(objects: Vec<BaseObject>, methods: Vec<BaseMethod>, base_code: BaseCode, name: String, actual_text: String) -> PyResult<BaseModule>{
     let mut positions: Vec<usize> = Vec::new();
-    let mut all_global: HashMap<String, Type> = HashMap::new();
     let mut global_objects: Vec<BaseObject> = Vec::new();
     let mut global_methods: Vec<BaseMethod> = Vec::new();
     for object in objects {
@@ -250,7 +247,6 @@ pub fn get_module(objects: Vec<BaseObject>, methods: Vec<BaseMethod>, base_code:
             positions.push(object.actual_line.actual_line.position);
             for line in object.lines.iter() {positions.push(line.position)}
             global_objects.push(object.clone());
-            all_global.insert(object.name.clone(),  Type::Object(object));
         }
     }
     for method in methods {
@@ -258,7 +254,6 @@ pub fn get_module(objects: Vec<BaseObject>, methods: Vec<BaseMethod>, base_code:
             positions.push(method.actual_line.actual_line.position);
             for line in method.lines.iter() {positions.push(line.position)}
             global_methods.push(method.clone());
-            all_global.insert(method.name.clone(), Type::Method(method.clone()));
         }
     }
     let variables: Vec<BaseVar> = base_code.variables
@@ -306,7 +301,6 @@ pub fn get_module(objects: Vec<BaseObject>, methods: Vec<BaseMethod>, base_code:
         methods: global_methods,
         objects: global_objects,
         code: global_code,
-        all: all_global,
         actual_text: actual_text.clone(),
     })
 }
