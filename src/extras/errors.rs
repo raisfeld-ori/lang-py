@@ -67,3 +67,14 @@ impl HandledError for NotOperationError {
         );
     }
 }
+
+#[pyclass]#[derive(Clone,Debug,PartialOrd, PartialEq)]
+pub struct FormattingError(pub String, pub Option<String>);
+
+impl HandledError for FormattingError {
+    fn to_pyerr(&self) -> PyErr  {
+        return PyErr::new::<PyBaseException, String>(
+            format!("FormattingError: {}\nsuggestion: {}", self.0, self.1.clone().unwrap_or("()".to_string()))
+        );
+    }
+}

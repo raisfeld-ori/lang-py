@@ -12,7 +12,6 @@ use std::sync::Arc;
 use crate::parsing::object_parsing::StatementType;
 
 
-pub static OPERATORS: [char; 3] = ['>', '<', '!'];
 pub static STATEMENTS: [&str; 14] = ["if", "else", "elif",
     "for", "def", "async", "try", "except",
     "finally", "while", "from",
@@ -23,6 +22,7 @@ pub static OPERATION_NOTATIONS: [&str; 26] = [
     "^", "~", ">>", "<<", " and ", " or ", " not ",
     " in ", " not in ", " is ", " is not ",
 ];
+pub static BOOLEAN_OPERATORS: [&str; 4] = ["<=", ">=", "==", "!="];
 
 /*
 all python of python's code can be categorized into 4 types:
@@ -68,12 +68,12 @@ async fn from_parse(i: usize, line: String) -> ShallowParsedLine {
     if STATEMENTS.contains(&first_word.as_str()) { line_type = CodeType::Statement; }
 
     if line.contains("=") {
-        let first_equation: usize = line.find("=").unwrap();
-        if line.chars().nth(first_equation + 1).unwrap() != '=' {
-            if !OPERATORS.contains(&line.chars().nth(first_equation - 1).unwrap()) {
-                line_type = CodeType::Variable;
-            };
+        let name = line[line.find('=').unwrap()..].to_string();
+        let mut not_bool = true;
+        for boolean_operation in BOOLEAN_OPERATORS {
+            if name.contains(boolean_operation) {not_bool = false;}
         }
+        if not_bool {line_type = CodeType::Variable;}
     }
 
     let mut spaces_found: i32 = 0;
@@ -117,6 +117,7 @@ impl ShallowParsedLine {
 pub struct BaseVar {
     pub name: String,
     pub value: String,
+    pub incrementation: Option<String>,
     pub annotation: Option<String>,
     pub actual_line: ShallowParsedLine,
 }
@@ -141,6 +142,10 @@ impl BaseVar {
 
             let name: String = shallow_var.actual_line[..break_point].to_string();
             let value: String = shallow_var.actual_line[break_point+1..].to_string();
+            let mut incrementation: Option<String> = None;
+            for operator in OPERATION_NOTATIONS {
+                if name.contains(operator) {incrementation = Some(operator.to_string());break;}
+            }
 
             let mut annotation: Option<String> = Some(String::new());
             if name.contains(":") {annotation = Some(name[name.find(":").unwrap() + 2..].to_string());}
@@ -149,6 +154,7 @@ impl BaseVar {
             return Ok(BaseVar {
                 name: name,
                 value: value,
+                incrementation: incrementation,
                 annotation: annotation,
                 actual_line: shallow_var,
             })
@@ -161,6 +167,7 @@ impl BaseVar {
     pub fn value(&self) -> String {return self.value.clone();}
     pub fn annotation(&self) -> Option<String> {return self.annotation.clone();}
     pub fn actual_line(&self) -> ShallowParsedLine {return self.actual_line.clone()}
+    pub fn incrementation(&self) -> Option<String> {return self.incrementation.clone()}
 }
 
 #[derive(Debug, Clone, PartialOrd, PartialEq)]

@@ -53,6 +53,7 @@ fn actions(_py: Python, module: &PyModule) -> PyResult<()>{
 fn build(_py: Python, module: &PyModule) -> PyResult<()>{
     module.add_class::<Builder>()?;
     module.add_class::<Structure>()?;
+    module.add_class::<Format>()?;
     Ok(())
 }
 

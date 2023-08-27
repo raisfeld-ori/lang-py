@@ -1,9 +1,13 @@
 var: float = 0.1
 print(var + 0.5)
+
+print("wtf")
+var >>= 1
 if var + 2 == 1:
     "this line doesn't do anything"
 var: str = "test"
 var += (2+(1+(1+1)))
+
 class example(object):
     def __abs__(self):
         return
