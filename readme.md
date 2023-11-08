@@ -1,3 +1,11 @@
+# WARNING: this is not a full project
+i made this project when i started learning rust, and  i didn't know anything about ownership,
+borrowing, lifetimes, and i was even lacking in terms of data structures and algorithms.
+this project is incomplete since i went on to make a better version of it (sadly, i lost
+the good version, but it was the same concept, except with far less code).
+this is just here for myself to compare my progress since i made this, and also because
+i lost the better version before the initial relese...
+
 # lang-py
 lang py is a free python 
 module for parsing
